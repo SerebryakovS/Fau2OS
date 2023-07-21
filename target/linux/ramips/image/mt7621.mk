@@ -682,3 +682,24 @@ define Device/zbt-wg3526-32M
 	kmod-usb3 kmod-usb-ledtrig-usbport wpad-basic
 endef
 TARGET_DEVICES += zbt-wg3526-32M
+
+#############################################################################
+
+define Device/cuman-mesh-v1-libremesh
+    DTS := CUMAN-MESH-V1
+    IMAGE_SIZE := $(ralink_default_fw_size_32M)
+    SUPPORTED_DEVICES += zbt-wg3526
+    DEVICE_TITLE := Cuman mesh device Ver.1 (libremesh)
+    DEVICE_PACKAGES := \
+        kmod-sdhci-mt7620 kmod-mt7603 kmod-mt76x2 kmod-mtd-rw \
+	nano bash iperf3 tcpdump htop wpad-mesh-wolfssl \
+	luci-nginx luci-compat luci-app-cpu-status-mini \
+	lime-app lime-proto-anygw lime-proto-batadv lime-proto-bmx7 lime-proto-wan \
+	lime-system lime-webui profile-freifunk-80211s-sae-bmx7-batadv \
+	ubus-lime-batman-adv ubus-lime-grondrouting ubus-lime-metrics ubus-lime-utils
+endef
+TARGET_DEVICES += cuman-mesh-v1-libremesh
+
+
+
+

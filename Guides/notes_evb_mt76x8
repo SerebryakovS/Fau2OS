@@ -1,0 +1,4 @@
+sudo chmod 777 /dev/ttyUSB0 && screen /dev/ttyUSB0 57600
+sudo chmod 777 /dev/ttyUSB1 && screen /dev/ttyUSB1 57600
+
+sudo uftpd -n -o ftp=0,tftp=69 ./

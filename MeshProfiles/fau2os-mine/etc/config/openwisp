@@ -1,0 +1,4 @@
+config controller 'http'
+    option url 'https://10.13.254.77'
+    option verify_ssl '0'
+    option shared_secret 'Fau2NetSharedPassword'

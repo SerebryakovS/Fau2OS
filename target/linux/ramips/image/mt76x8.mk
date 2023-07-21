@@ -486,3 +486,13 @@ define Device/zyxel_keenetic-extra-ii
 	check-size $$$$(IMAGE_SIZE) | zyimage -d 6162 -v "ZyXEL Keenetic Extra II"
 endef
 TARGET_DEVICES += zyxel_keenetic-extra-ii
+
+#############################################################################
+
+define Device/fau2dev-mesh-v1-libremesh
+  DTS := SKW92A
+  IMAGE_SIZE := 16064k
+  DEVICE_TITLE := Fau2Dev mesh device Ver.1 (libremesh)
+  DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci
+endef
+TARGET_DEVICES += fau2dev-mesh-v1-libremesh
