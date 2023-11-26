@@ -1,0 +1,11 @@
+﻿msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+"Language: kz\n"
+"Last-Translator: Stepan Serebryakov\n"
+
+msgid "Mesh Setup Wizard"
+msgstr "Желіні орнату шебері"
+
+msgid "Configure your mesh network in few simple steps"
+msgstr "Желіні орнату бірнеше қарапайым қадамдарды орындайды"

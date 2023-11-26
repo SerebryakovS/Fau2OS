@@ -1,0 +1,5 @@
+#!/bin/sh
+
+mkdir -p /host
+mount -t 9p host /host
+[ ! -x /host/test-init.sh ] || /host/test-init.sh

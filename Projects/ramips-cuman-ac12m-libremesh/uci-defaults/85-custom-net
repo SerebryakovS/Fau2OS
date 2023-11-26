@@ -1,0 +1,22 @@
+#!/bin/sh
+
+uci batch << EOF
+
+###################################### switch setttings
+add network switch
+set network.@switch[0].name='switch0'
+set network.@switch[0].reset='1'
+set network.@switch[0].enable_vlan='1'
+
+add network switch_vlan
+set network.@switch_vlan[0].device='switch0'
+set network.@switch_vlan[0].vlan='1'
+set network.@switch_vlan[0].ports='0 1 2 3 6t'
+add network switch_vlan
+set network.@switch_vlan[1].device='switch0'
+set network.@switch_vlan[1].vlan='2'
+set network.@switch_vlan[1].ports='4 6t'
+
+commit
+
+EOF

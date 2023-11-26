@@ -1,0 +1,170 @@
+#!/bin/bash
+
+# exec location : /usr/libexec/rpcd/mesh
+
+case "$1" in
+	list)
+		echo '{ "GetClientsInfo": {}, "GetInetConnInfo": {"Hostname" : "String"}, "GetMeshConnInfo": {"Hostname" : "String"} }'
+	;;
+	call)
+		case "$2" in
+			GetClientsInfo)
+				sed 's/*/Unknown/' /tmp/dhcp.leases > TmpLeasesFile
+				declare -a ActiveClients
+				for Wlan in "wlan0" "wlan1"; do
+					iwinfo $Wlan assoclist > TmpClientsConnInfoFile
+					let ClientsCount=$(wc -l TmpClientsConnInfoFile | cut -f1 -d ' ')/5
+					if [ "$ClientsCount" -eq "0" ];then
+						continue;
+					fi;
+					RadioType='"RadioType":"'
+					RadioChannel='"RadioChannel":"'
+					if [ $Wlan = "wlan0" ];then
+						RadioType=$RadioType'2g",'
+						RadioChannel=$RadioChannel$(uci get wireless.radio0.channel)'",'
+					elif [ $Wlan = "wlan1" ];then
+						RadioType=$RadioType'5g",'
+						RadioChannel=$RadioChannel$(uci get wireless.radio1.channel)'",'
+					fi;
+					Counter=1; StartLine=1; StopLine=4;
+					while [ $Counter -lt $(($ClientsCount+1)) ];do
+						LineNumber=1;
+						NetworkParameters=""
+						SignalPower='"SignalPower":"'
+						LinkRates='"LinkRates":{"RxBitrate":"'
+						while read InfoLine; do
+							read -ra InfoLineItems <<< $InfoLine
+							case "$LineNumber" in
+								"1")
+									read -ra NetArr <<< $(cat TmpLeasesFile | grep $(echo ${InfoLineItems[0]} | awk '{print tolower($0)}'))
+									NetworkParameters=$(printf '"MACAddress":"%s","IPAddress":"%s","Hostmame":"%s",' ${NetArr[1]} ${NetArr[2]} ${NetArr[3]})
+									SignalPower=$SignalPower${InfoLineItems[1]}'",'
+									((LineNumber++))
+								;;
+								"2")
+									LinkRates=$LinkRates${InfoLineItems[1]}'","TxBitrate":"'
+									((LineNumber++))
+								;;
+								"3")
+									LinkRates=$LinkRates${InfoLineItems[1]}'","ExpectedThroughput":"'
+									((LineNumber++))
+								;;
+								"4")
+									LinkRates=$LinkRates${InfoLineItems[2]}'"}'
+								;;
+							esac;
+						done <<< $(eval "sed -n '$StartLine,$StopLine p' TmpClientsConnInfoFile")
+						ConnectionInfo='"ConnectionInfo":{'$RadioType$RadioChannel$SignalPower$LinkRates'}'
+						ClientJsonString='{'$NetworkParameters$ConnectionInfo'}'
+						ActiveClients+=($ClientJsonString)
+						let StartLine=$StartLine+5; let StopLine=$StopLine+5;
+						((Counter++))
+					done;
+				done;
+				rm TmpClientsConnInfoFile;
+				rm TmpLeasesFile;
+				JsonPacketToReturn=$(echo ${ActiveClients[@]} | jq -n '.ActiveClients |= [inputs]')
+
+				#TODO
+				BlockedClients='[]'
+				JsonPacketToReturn=$(echo $JsonPacketToReturn | jq --arg BlockedClients $BlockedClients '.BlockedClients += $BlockedClients')
+				#TODO
+
+				echo "$JsonPacketToReturn"
+			;;
+			GetInetConnInfo)
+# 				read InputParameters;
+				if [ $(ping -c 1 -q 8.8.8.8 >&/dev/null; echo $?) -ne "0" ];then
+					echo '{"error":"No internet connection on master"}'
+				else
+# 					RequestedHostname=$( echo "$InputParameters" | jq '.Hostname' | tr -d '"' );
+					CurrentHostname=$(uci get system.@system[0].hostname);
+
+# 					if [ $RequestedHostname != $CurrentHostname ];then
+# 						if [ $RequestedHostname = "mesh_slave_1" ] || [ $RequestedHostname = "mesh_slave_2" ];then
+# 							socat TCP:$RequestedHostname:12883 OPEN:SpeedTestData,creat,append,ignoreeof
+# 						else
+# 							echo '{"error":"Wrong hostname provided"}'
+# 						fi;
+# 					else
+					speedtest-netperf.sh -H netperf-west.bufferbloat.net --ping 1.1.1.1 --sequential --time 5 > SpeedTestData
+# 					fi;
+					if [ -f "SpeedTestData" ];then
+						Download=$(cat SpeedTestData | grep "Download:" | cut -f4 -d ' ');
+						if [ "$Download" = "" ];then
+							echo '{"error":"No internet connection"}'
+						else
+							Upload=$(cat SpeedTestData | grep "Upload:" | cut -f6 -d ' ');
+# 							echo $(printf '{"Hostname":"%s","InternetConnection":{"Download":"%s","Upload":"%s"}}' $RequestedHostname $Download $Upload)
+							echo $(printf '{"InternetConnection":{"Download":"%s","Upload":"%s"}}' $Download $Upload)
+						fi;
+						rm SpeedTestData;
+					fi;
+				fi;
+			;;
+			GetMeshConnInfo)
+				read InputParameters;
+				master_macLbyte="04"; slave1_macLbyte="06"; slave2_macLbyte="08";
+# 				RequestedHostname=$( echo "$InputParameters" | jq '.Hostname' | tr -d '"' );
+				CurrentHostname=$(uci get system.@system[0].hostname);
+# 				if [ $RequestedHostname != $CurrentHostname ];then
+# 					if [ $RequestedHostname = "mesh_slave_1" ] || [ $RequestedHostname = "mesh_slave_2" ];then
+# 						socat TCP:$RequestedHostname:12884 OPEN:IwInfoData,creat,append
+# 					else
+# 						echo '{"error":"Wrong hostname provided"}'
+# 					fi;
+# 				else
+				iw dev mesh0 station dump > IwInfoData
+# 				fi;
+				if [ -f "IwInfoData" ];then
+					declare -a ActiveDevices
+					awk -vc=1 'NR%32==0{++c}{print $0 > "Dev_"c}' IwInfoData
+					let CountLines=$(cat IwInfoData | wc -l)+1
+					let CountDevices=$CountLines/32
+					if [ $CountLines -gt "33" ]; then
+						CountDevices=2;
+					else
+						CountDevices=1;
+					fi;
+					Counter=1;
+					while [ $Counter -lt $(($CountDevices+1)) ];do
+						Filename="Dev_$Counter"
+						DeviceJsonString='{"Hostname":'
+						DeviceMACAddress=$(cat $Filename | grep Station | cut -f2 -d ' ')
+						FormattedMac=$(echo $DeviceMACAddress | awk '{print tolower($0)}')
+						TargetDomain=""
+						case "${DeviceMACAddress: -2}" in
+							"$master_macLbyte")
+								DeviceJsonString=$DeviceJsonString'"mesh_master","MACAddress":"'$FormattedMac'",'
+								TargetHostname="mesh_master.mlan"
+							;;
+							"$slave1_macLbyte")
+								DeviceJsonString=$DeviceJsonString'"mesh_slave_1","MACAddress":"'$FormattedMac'",'
+								TargetHostname="mesh_slave_1.mlan"
+							;;
+							"$slave2_macLbyte")
+								DeviceJsonString=$DeviceJsonString'"mesh_slave_2","MACAddress":"'$FormattedMac'",'
+								TargetHostname="mesh_slave_2.mlan"
+							;;
+						esac;
+						IpAddress=$(ping $TargetHostname -q -c 1); IpAddress=${IpAddress#*(}; IpAddress=${IpAddress%)*};
+						DeviceJsonString=$DeviceJsonString'"IPAddress":"'$IpAddress'",'
+						SignalPower='"SignalPower":"'$(cat $Filename | grep "signal: " | cut -f3 -d ' ')'",'
+						LinkRates='"LinkRates":{"RxBitrate":"'$(cat $Filename | grep "rx bitrate:" | cut -f2 -d ':' | cut -f1 -d ' ')'",'
+						LinkRates=$LinkRates'"TxBitrate":"'$(cat $Filename | grep "tx bitrate:" | cut -f2 -d ':' | cut -f1 -d ' ')'",'
+						LinkRates=$LinkRates'"ExpectedThroughput":"'$(cat $Filename | grep "expected throughput:" | cut -f2 -d ':' | tr -d 'Mbps')'"}}'
+						DeviceJsonString=$DeviceJsonString$SignalPower$LinkRates
+						ActiveDevices+=($DeviceJsonString)
+						((Counter++))
+						rm $Filename
+					done;
+					rm IwInfoData;
+					JsonPacketToReturn=$(echo ${ActiveDevices[@]} | jq -n '.MeshConnections |= [inputs]')
+# 					JsonPacketToReturn=$(echo $JsonPacketToReturn | jq --arg Hostname "$RequestedHostname" '. += {"Hostname": $Hostname}')
+					echo "$JsonPacketToReturn"
+				fi;
+			;;
+		esac;
+	;;
+esac;
+

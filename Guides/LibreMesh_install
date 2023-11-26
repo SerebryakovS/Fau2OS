@@ -1,0 +1,7 @@
+
+cat << EOF >> feeds.conf
+src-git libremesh https://github.com/libremesh/lime-packages.git;master
+src-git profiles https://github.com/libremesh/network-profiles.git
+EOF
+scripts/feeds update -a
+scripts/feeds install -a

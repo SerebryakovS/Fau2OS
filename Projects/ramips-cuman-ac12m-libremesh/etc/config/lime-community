@@ -1,0 +1,55 @@
+
+config lime system
+    option hostname 'fau2-%M4%M5%M6'
+    option domain 'fau2.net'
+    option keep_on_upgrade 'libremesh base-files-essential /etc/sysupgrade.conf'
+
+config lime network
+    option primary_interface eth0
+    option main_ipv4_address '10.%N1.%N2.0/24'
+    option main_ipv6_address 'fd43:1508:%N1%N2:%N300::/64'
+    list protocols ieee80211s
+    list protocols lan
+    list protocols anygw
+    list protocols batadv:%N1
+    list protocols bmx7:18
+    list resolvers 8.8.8.8
+    list resolvers 8.8.4.4
+    option batadv_orig_interval '2000'
+    option bmx7_mtu '1500'
+    option bmx7_over_batman false
+    option bmx7_pref_gw none
+    option anygw_mac "aa:aa:aa:%N1:%N2:aa"
+
+config lime wifi
+    option country 'KZ'
+    option ap_ssid 'fau2ClientAP'
+    option ap_key 'apkey123'
+    option apname_ssid 'fau2ClientAP/%H'
+    option apname_key 'apkey123'
+    option apname_encryption 'psk2'
+
+config lime-wifi-band '2ghz'
+    option channel '7'
+    option htmode 'HT40'
+    option distance '200'
+
+config lime-wifi-band '5ghz'
+    option channel '36'
+    option distance '100'
+    option htmode 'HT40'
+
+config wifi 'radio0'
+    list modes 'ap'
+
+config wifi 'radio1'
+    list modes 'ap'
+    list modes 'ieee80211s'
+    option ieee80211s_mesh_id 'fau2MeshId'
+    option ieee80211s_encryption 'sae'
+    option ieee80211s_mesh_fwding '0'
+    option ieee80211s_key 'fau2Key'
+
+config net 'wan'
+    option ifname 'eth0.2'
+    option proto 'dhcp'

@@ -1,0 +1,5 @@
+
+config system 'core'
+        option id_part1 'FF'
+        option id_part2 'FF'
+        option id_part3 'FF'
