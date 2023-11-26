@@ -33,3 +33,4 @@ git-src
 *.qcow2
 *.bin
 *.ext4
+/QemuModels/openwrt-malta-le-root.ext4
