@@ -684,11 +684,12 @@ endef
 TARGET_DEVICES += zbt-wg3526-32M
 
 #############################################################################
+#############################################################################
+#############################################################################
 
-define Device/cuman-mesh-v1-libremesh
-    DTS := CUMAN-MESH-V1
+define Device/cuman-ac12m-gpa
+    DTS := CUMAN-AC12M-GPA
     IMAGE_SIZE := $(ralink_default_fw_size_32M)
-    SUPPORTED_DEVICES += zbt-wg3526
     DEVICE_TITLE := Cuman mesh device Ver.1 (libremesh)
     DEVICE_PACKAGES := \
         kmod-sdhci-mt7620 kmod-mt7603 kmod-mt76x2 kmod-mtd-rw \
@@ -698,8 +699,7 @@ define Device/cuman-mesh-v1-libremesh
 	lime-system lime-webui profile-freifunk-80211s-sae-bmx7-batadv \
 	ubus-lime-batman-adv ubus-lime-grondrouting ubus-lime-metrics ubus-lime-utils
 endef
-TARGET_DEVICES += cuman-mesh-v1-libremesh
-
+TARGET_DEVICES += cuman-ac12m-gpa
 
 
 

@@ -1,0 +1,10 @@
+{
+        "mesh": {
+                "description": "Access controls for unauthenticated requests",
+                "read": {
+                        "ubus": {
+                                "mesh": ["*"]
+                        }
+                }
+        }
+}

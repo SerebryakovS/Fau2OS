@@ -1,0 +1,34 @@
+#!/bin/bash
+if [ $(uci get fmesh.@system[0].role) != "master" ]; then
+	echo '[WIUOS-utils]: WAN configuration is for Master only!' > /dev/kmsg
+else
+	function IsOptionExist(){
+		echo $(cat /etc/config/fmesh | grep $1 | wc -l);
+	}
+	StaticOptions=( "ipaddr" "netmask" "gateway" "dns" )
+	WanProto=$(uci get fmesh.@system[0].wan_proto)
+	uci set network.wan.proto=$WanProto
+	case $WanProto in
+		"dhcp")
+			for Option in "${StaticOptions[@]}";do
+				uci del network.wan.$Option &>/dev/null
+			done;
+		;;
+		"static")
+			for Option in "${StaticOptions[@]}";do
+				if [ $( IsOptionExist "wan_"$Option ) = "1" ];then
+					uci set network.wan.$Option=$(uci get fmesh.@system[0].wan_$Option);
+				fi;
+			done;
+		;;
+		"pppoe" | "pptp")
+			echo "[error]: This mode is under development, please use 'static' or 'dhcp'"
+			exit -1;
+		;;
+		*)
+			echo "[error]: Unknown protocol for WAN found in config.."
+			exit -1;
+		;;
+	esac;
+	uci commit network
+fi;

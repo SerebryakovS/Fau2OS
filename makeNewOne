@@ -5,185 +5,136 @@ RUNNING_MODE_NOT_SET=-1
 NUMBER_MODEL_NOT_SET=-2
 COMPILE_MODE_NOT_SET=-3
 
-ProjectsPath="$pwd"/projects
+ProjectsPath=$(pwd)/Projects
 
-function PrintSupportedModels(){
-	echo "Build All                        №:  0"
-	echo "skw92-mt76x8-only-libremesh      №:  1"
+TargetList=(
+    "Build-All"
+    "ramips-skylab-skw92a-libremesh"
+    "ramips-cuman-ac12m-libremesh"
+);
+
+function PrintSupportedModels() {
+    local N=0;
+    for Model in "${TargetList[@]}"; do
+        printf "%-30s\t№:%2d\n" $Model $N;
+        ((N++));
+    done;
 };
 
 function GetBuildModel(){
-	case $1 in
-		 1) build_model="g-v11"
-			;;
-		 2) build_model="g-v12"
-			;;
-		*)
-			return
-			;;
-	esac
-	echo $build_model
-}
+    local ModelNum=$1;
+    local MaxIndex=$((${#TargetList[@]} - 1));
+    if ! [[ "$ModelNum" =~ ^[0-9]+$ ]]; then
+        echo "[error]: Model number is invalid: $ModelNum";
+        exit $NUMBER_MODEL_NOT_SET;
+    fi;
+    if (( ModelNum >= 0 && ModelNum <= MaxIndex )); then
+        echo ${TargetList[$ModelNum]};
+    else
+        echo "[error]: Model number is out of range: $ModelNum";
+        exit $NUMBER_MODEL_NOT_SET;
+    fi;
+};
+
+function GetModelTarget(){
+    local SelectedModel=$1; echo ${SelectedModel%%-*};
+};
 
 function GetConfig(){
-	cp CumanProfiles/spectra_profiles/$1/$1.config ./.config || cp CumanProfiles/mesh_profiles/$1/$1.config ./.config
-}
+    cp -f $ProjectsPath/$1/$1.config ./.config;
+};
 
 function SetConfig(){
-	cp ./.config CumanProfiles/spectra_profiles/$1/$1.config || cp ./.config CumanProfiles/mesh_profiles/$1/$1.config
-}
+    cp -f ./.config $ProjectsPath/$1/$1.config;
+};
 
-function ClearCache(){
-	rm -rf ./files/*
-# 	rm -rf ./package/ProfilePackages/*
-	rm -rf ./target/linux/ramips/base-files/sbin/*
-	rm -rf ./target/linux/ramips/base-files/etc/uci-defaults/*
-}
+function ClearModelCache(){
+    ModelTarget=$1;
+    rm -rf ./files/* && rmdir ./files;
+    rm -rf ./target/linux/$ModelTarget/base-files/sbin/*
+    rm -rf ./target/linux/$ModelTarget/base-files/etc/uci-defaults/*
+};
+
+function ClearBuildArtifacts(){
+    TargetSystem=$1;
+    rm -rf FirmwareBin/* && rmdir FirmwareBin;
+    for Directory in ./bin/targets/$TargetSystem/*; do
+        if [ -d "$Directory" ]; then
+            rm -rf "$Directory"/*.manifest;
+            rm -rf "$Directory"/*.bin;
+        fi;
+    done;
+};
 
 function MakeSelectedModel(){
-	ModelNum=$1
-	CompilationMode=$2
-	if [ $ModelNum = "0" ];then
-		echo "Making ALL models"
-		for Idx in $(seq 1 1 $LastModelNum);do
-			MakeSelectedModel $Idx $CompilationMode
-		done;
-		echo "All Cuman-models successfully compiled!"
-		exit $EXIT_SUCCESS;
-	fi;
-	build_model=$(GetBuildModel $ModelNum);
-	GetConfig $build_model
-	rm -rf ./bin/targets/ramips/mt7621/*.manifest
-	rm -rf ./bin/targets/ramips/mt7621/*.bin
-	case $ModelNum in
-		1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9)
-			echo "All spectra original profiles specific configuration.."
-			if [ -d "$ProjectsPath/spectra_profiles/$build_model/sbin/" ];then
-				cp $ProjectsPath/spectra_profiles/$build_model/sbin/* ./target/linux/ramips/base-files/sbin/
-			fi;
-			if [ -d "$ProjectsPath/spectra_profiles/$build_model/uci-defaults/" ];then
-				cp $ProjectsPath/spectra_profiles/$build_model/uci-defaults/* ./target/linux/ramips/base-files/etc/uci-defaults/
-			fi;
-			if [ -d "$ProjectsPath/spectra_profiles/$build_model/etc" ];then
-				cp -r $ProjectsPath/spectra_profiles/$build_model/etc ./files/
-			fi;
-			if [ -d "$ProjectsPath/spectra_profiles/$build_model/applications/" ];then
-				cp -r $ProjectsPath/spectra_profiles/$build_model/applications/* ./package/ProfilePackages/
-			fi;
-			;;
-	esac
-	case $ModelNum in
-		 1)
-			echo "Make config Spectra-AC12-G-V1.1"
-			## USER SPESIFIC INSTALLATION SETTINGS
-			;;
-		 2)
-			echo "Make config Spectra-AC12-G-V1.2"
-			;;
-		 3)
-			echo "Make config Spectra-AC12-G-V1.2-Quagga"
-			## USER SPESIFIC INSTALLATION SETTINGS
-			;;
-		 4)
-			echo "Make config Spectra-AC12-G-V1.3-A.2"
-			## USER SPESIFIC INSTALLATION SETTINGS
-			;;
-		 5)
-			echo "Make config Spectra-AC12-G-V1.4-A.2"
-			## USER SPESIFIC INSTALLATION SETTINGS
-			;;
-		 6)
-			echo "Make config Spectra-AC12-GLTE-V1.1"
-			## USER SPESIFIC INSTALLATION SETTINGS
-			;;
-		 7)
-			echo "Make config Spectra-AC12-GLTE-V1.2"
-			## USER SPESIFIC INSTALLATION SETTINGS
-			;;
-		 8)
-			echo "Make config Spectra-AC12-GLTE-V1.3-A.2"
-			## USER SPESIFIC INSTALLATION SETTINGS
-			;;
-		 9)
-			echo "Make config Spectra-AC12-GLTE-V1.4-A.2"
-			## USER SPESIFIC INSTALLATION SETTINGS
-			;;
-		10)
-			echo "Make config Spectra-AC12-M-GPA-V1.2"
-			cp -r $ProjectsPath/mesh_profiles/$build_model/orig/etc ./files/
-			cp -r $ProjectsPath/mesh_profiles/$build_model/orig/usr ./files/
-			cp $ProjectsPath/mesh_profiles/$build_model/orig/sbin/* ./target/linux/ramips/base-files/sbin/
-			cp -r $ProjectsPath/mesh_profiles/$build_model/etc ./files/
-			cp -r $ProjectsPath/mesh_profiles/$build_model/applications/* ./package/ProfilePackages/
-			cp $ProjectsPath/mesh_profiles/$build_model/sbin/* ./target/linux/ramips/base-files/sbin/
-			cp $ProjectsPath/mesh_profiles/$build_model/uci-defaults/* ./target/linux/ramips/base-files/etc/uci-defaults/
-			PathSrc=$ProjectsPath/mesh_profiles/$build_model/applications/luci-fau2ui-setupWizardTab
-			PathDest=$ProjectsPath/mesh_profiles/$build_model/applications/luci-fau2ui-setupWizardTab/po/templates/meshWizard.pot
-			./feeds/luci/build/i18n-scan.pl $PathSrc > $PathDest
-			./feeds/luci/build/i18n-update.pl
-			;;
-		$LastModelNum)
-			echo "Make config Spectra-AC12-M-GPA-V1.2-LibreMesh"
-			cp -r $ProjectsPath/mesh_profiles/$build_model/etc ./files/
-			;;
-		*)
-			echo "[error]: Target model(second argument) is not supported. Try:  0 < numberNum <=:"$LastModelNum
-			exit $NUMBER_MODEL_NOT_SET;
-		;;
-	esac
-	if [ -z "$CompilationMode" ];then
-		echo "[error] Compilation mode didn't selected"
-		exit $COMPILE_MODE_NOT_SET
-	fi;
-	make defconfig
-	make download
-	if [ $CompilationMode = "debug" ];then
-		make -j1 V=sc
-	elif [ $CompilationMode = "release" ];then
-		make -j$(nproc)
-	fi;
-	mkdir -p CumanBin/
-	cp ./bin/targets/ramips/mt7621/*-sysupgrade.bin ./CumanBin/$build_model.bin
+    ModelNum=$1;
+    CompilationMode=$2;
+    if [ $ModelNum = "0" ];then
+        echo "[..]: Making ALL models"
+        for Idx in $(seq 1 1 $LastModelNum);do
+            MakeSelectedModel $Idx $CompilationMode;
+        done;
+        echo "[ok]: All Cuman-models successfully compiled!";
+        exit $EXIT_SUCCESS;
+    fi;
+    SelectedModel=$(GetBuildModel $ModelNum);
+    ModelTarget=$(GetModelTarget $SelectedModel);
+    ClearBuildArtifacts $ModelTarget 2>/dev/null;
+    GetConfig $SelectedModel;
+    #-------------------------------------------------------------------------------------------------
+    cp -f $ProjectsPath/$SelectedModel/sbin/* ./target/linux/$ModelTarget/base-files/sbin/
+    cp -f $ProjectsPath/$SelectedModel/uci-defaults/* ./target/linux/$ModelTarget/base-files/etc/uci-defaults/
+    cp -rf $ProjectsPath/$SelectedModel/etc ./files/
+
+    API_FOLDER=$ProjectsPath/$SelectedModel/usr/
+    if [ -d "$API_FOLDER" ]; then
+        mkdir -p ./files/usr/
+        rsync -av --exclude='**/doc/' "$API_FOLDER" ./files/usr/
+    fi;
+    #-------------------------------------------------------------------------------------------------
+    if [ -z "$CompilationMode" ];then
+        echo "[error] Compilation mode didn't selected"
+        exit $COMPILE_MODE_NOT_SET
+    fi;
+    make defconfig
+    make download
+    if [ $CompilationMode = "debug" ];then
+        make -j1 V=sc
+    elif [ $CompilationMode = "release" ];then
+        make -j$(nproc)
+    fi;
+    mkdir -p FirmwareBin/
+    cp ./bin/targets/$ModelTarget/mt7621/*-sysupgrade.bin ./FirmwareBin/$SelectedModel-$(date +"%d%m%y_%H%M%S").bin
+    ClearModelCache $ModelTarget 2>/dev/null;
 };
 
 function main(){
-# 	ClearCache 2>/dev/null
-	if [ $# -eq 0 ];then
-		echo "[error]: Running mode is not set..."
-		exit $RUNNING_MODE_NOT_SET;
-	fi;
-	ModeArg=$1
-	mkdir -p ./package/ProfilePackages
-	mkdir -p ./files/
-	case $ModeArg in
-		"models")
-			PrintSupportedModels;
-			;;
-		"build")
-			rm -rf CumanBin/* && rmdir CumanBin
-			ModelNum=$2; CompilationMode=$3;
-			MakeSelectedModel $ModelNum $CompilationMode
-			;;
-		"menu")
-			ModelNum=$2
-			build_model=$(GetBuildModel $ModelNum)
-			GetConfig $build_model
-			make menuconfig
-			read -p 'Do you want to set this profile with new settings?[y/N]' Answer
-			if [ $Answer = "y" ];then
-				SetConfig $build_model
-				echo "[OK]: Configuration file of the selected model updated"
-			fi;
-			;;
-		"reload_cuman_configs")
-			for Idx in $(seq 1 1 $OldCumanProfilesTail);do
-				ReloadCumanConfigs $Idx
-			done;
-			echo "[OK]: Cuman configuration files resetted by original diffconfings"
-			;;
-	esac;
-	ClearCache 2>/dev/null
-	exit $EXIT_SUCCESS;
+    if [ $# -eq 0 ];then
+        echo "[error]: Running mode is not set...";
+        exit $RUNNING_MODE_NOT_SET;
+    fi;
+    ModeArg=$1;
+    mkdir -p ./files/
+    case $ModeArg in
+        "models")
+            PrintSupportedModels;
+            ;;
+        "build")
+            ModelNum=$2; CompilationMode=$3;
+            MakeSelectedModel $ModelNum $CompilationMode;
+            ;;
+        "menu")
+            ModelNum=$2;
+            SelectedModel=$(GetBuildModel $ModelNum);
+            GetConfig $SelectedModel;
+            make menuconfig;
+            read -p 'Do you want to set this profile with new settings?[y/N]' Answer;
+            if [ $Answer = "y" ]; then
+                SetConfig $SelectedModel;
+                echo "[ok]: Configuration file of the selected model updated.";
+            fi;
+            ;;
+    esac;
+    exit $EXIT_SUCCESS;
 }
-
 main "$@" # <--- entryPoint

@@ -1,0 +1,36 @@
+<div class="cbi-map" id="cbi-<%=self.config%>" style="background-color:transparent; ">
+        <center>
+                <% if self.title and #self.title > 0 then %>
+                        <h3 name="content" style="background-color:#00666630; font-size:2.0rem; letter-spacing:0rem; border-radius:10px; margin-bottom:10px;"><%=self.title%></h3>
+                <% end %>
+                <% if self.description and #self.description > 0 then %>
+                        <div class="cbi-map-descr" ><%=self.description%></div>
+                <% end %>
+        </center>
+        <%- self:render_children() %>
+</div>
+<style>
+        .cbi-value-title{
+                float : none;
+        }
+        .cbi-value{
+                line-height : 0rem;
+        }
+        .cbi-value-description{
+                opacity : .8;
+                padding : 0rem;
+                display : initial;
+                border-radius : 0px;
+        }
+        .cbi-page-actions{
+                text-align : center;
+        }
+</style>
+<script>
+        setTimeout(
+                function(){
+                        var ButtonApply = document.getElementsByClassName("cbi-button")[0]
+                        ButtonApply.value = "RUN SETUP";
+                }, 10);
+
+</script>

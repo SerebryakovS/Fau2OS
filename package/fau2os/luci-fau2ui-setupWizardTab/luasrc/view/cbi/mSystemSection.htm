@@ -1,0 +1,100 @@
+<center>
+    <div class="cbi-section" id="cbi-<%=self.config%>-<%=self.sectiontype%>" style="width:100%; padding:0px;">
+        <div class="cbi-section-node" id="cbi-fmesh-core" style="background-color:#00666620; margin-top:0px; padding-bottom:15px;">
+            <% self:render_children("core") %>
+        </div>
+    </div>
+    <script>
+        window.onload = function(){
+            setTimeout(
+                function(){
+                    var Role = document.getElementById("widget.cbid.fmesh.core.role")
+                    Role.addEventListener('change', function(){
+                        ButtonToDisable = document.getElementsByClassName("cbi-button")[0]
+                        if (Role.value == "none"){
+                                ButtonToDisable.disabled = true
+                                return;
+                        };
+                        if (Role.value == "master"){
+                            var Proto = document.getElementById("widget.cbid.fmesh.core.wan_proto")
+                            function StaticIPButtonDisabler(){
+                                if (Proto.value == "static"){
+                                    if (document.getElementById("widget.cbid.fmesh.core.wan_ipaddr").value.length == 0){
+                                        ButtonToDisable.disabled = true;
+                                    };
+                                } else if (Proto.value == "none"){
+                                    ButtonToDisable.disabled = true;
+                                }else {
+                                    ButtonToDisable.disabled = false;
+                                };
+                            };
+                            StaticIPButtonDisabler();
+                            Proto.addEventListener('change', function(){
+                                if (Proto.value == "static"){
+                                    StaticIPButtonDisabler();
+                                }else if (Proto.value == "dhcp"){
+                                    ButtonToDisable.disabled = false;
+                                }else if (Proto.value == "pppoe" || Proto.value == "none"){
+                                    ButtonToDisable.disabled = true;
+                                }
+
+                            },false)
+                            return;
+                        };
+                        if (Role.value == "slave_1" || Role.value == "slave_2"){
+                                ButtonToDisable.disabled = false;
+                        };
+                        return;
+                    }, false);
+
+
+                }, 1000);
+        };
+        document.querySelectorAll('[data-mask]').forEach(function(e) {
+            function Format(Elem,_Event) {
+                if (["ArrowLeft","ArrowRight"].indexOf(_Event.code) > -1){
+                    return;
+                }
+                if (["Backspace","Delete"].indexOf(_Event.code) <= -1){
+                    const Value = Elem.value.replace(/[^\.0-9]?/g, '')
+                    Elem.value = Value
+                };
+                const Matched = Elem.value.match(/([0-9]{0,3})?(\.)?([0-9]{0,3})?(\.)?([0-9]{0,3})?(\.)?([0-9]{0,3})?/)
+                for (Idx=1;Idx<=7;Idx+=2){
+                    if (parseInt(Matched[Idx]) > 255){
+                        Matched[Idx] = '255';
+                    };
+                };
+                if (Matched[1].length == 3) {
+                    Elem.value = `${Matched[1]}${Matched[2] || ''}`
+                };
+                if (Matched[1] && Matched[3]) {
+                    Elem.value = `${Matched[1]}.${Matched[3]}${Matched[4] || ''}`
+                };
+                if (Matched[1] && Matched[3] && Matched[5]) {
+                    Elem.value = `${Matched[1]}.${Matched[3]}.${Matched[5]}${Matched[6] || ''}`
+                };
+                if (Matched[1] && Matched[3] && Matched[5] && Matched[7]) {
+                    Elem.value = `${Matched[1]}.${Matched[3]}.${Matched[5]}.${Matched[7]}`
+                    if (Elem.id == "widget.cbid.fmesh.core.wan_ipaddr"){
+                        document.getElementById("widget.cbid.fmesh.core.wan_netmask").value = "255.255.255.0"
+                        document.getElementsByClassName("cbi-button")[0].disabled = false
+                    };
+                    return;
+                };
+                if (Elem.id == "widget.cbid.fmesh.core.wan_ipaddr"){
+                    document.getElementsByClassName("cbi-button")[0].disabled = true
+                };
+            };
+            e.addEventListener('keyup', function(_Event) {
+                 Format(e,_Event);
+            }, false);
+            e.addEventListener('keydown', function(_Event) {
+                 Format(e,_Event);
+            }, false);
+            e.addEventListener('load', function(_Event) {
+                 Format(e,_Event);
+            }, false);
+        });
+    </script>
+</center>

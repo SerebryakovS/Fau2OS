@@ -29,3 +29,7 @@ git-src
 .project
 .cproject
 .ccache
+*.elf
+*.qcow2
+*.bin
+*.ext4
