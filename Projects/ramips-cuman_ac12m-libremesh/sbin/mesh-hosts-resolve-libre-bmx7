@@ -1,0 +1,18 @@
+#!/bin/bash
+
+InputJsonFile="/var/run/bmx7/json/links"
+Hostnames=($(jq -r '.links[].name' "$InputJsonFile"))
+ExistingLinks=()
+for Hostname in "${Hostnames[@]}"; do
+    M5_hex="${Hostname: -4:2}"
+    M6_hex="${Hostname: -2}"
+    M5_dec=$(printf "%d" 0x$M5_hex)
+    M6_dec=$(printf "%d" 0x$M6_hex)
+    N1=$(ifconfig br-lan | awk '/inet / {split($2, a, "."); print a[2]}')
+    N2=$(ifconfig br-lan | awk '/inet / {split($2, a, "."); print a[3]}')
+    IPv4Address="10.$N1.$M5_dec.$M6_dec"
+    ExistingLink="{\"Hostname\":\"$Hostname\",\"IPv4Address\":\"$IPv4Address\"}"
+    ExistingLinks+=("$ExistingLink")
+done;
+OutputJson="{\"Nodes\":[$(IFS=, ; echo "${ExistingLinks[*]}")]}"
+echo "$OutputJson" | jq .

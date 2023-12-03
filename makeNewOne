@@ -9,8 +9,8 @@ ProjectsPath=$(pwd)/Projects
 
 TargetList=(
     "Build-All"
-    "ramips-skylab-skw92a-libremesh"
-    "ramips-cuman-ac12m-libremesh"
+    "ramips-skylab_skw92a-libremesh"
+    "ramips-cuman_ac12m-libremesh"
 );
 
 function PrintSupportedModels() {
@@ -66,7 +66,7 @@ function ClearBuildArtifacts(){
     done;
 };
 
-function MakeSelectedModel(){
+function MakeSelectedModel()    {
     ModelNum=$1;
     CompilationMode=$2;
     if [ $ModelNum = "0" ];then
@@ -82,15 +82,15 @@ function MakeSelectedModel(){
     ClearBuildArtifacts $ModelTarget 2>/dev/null;
     GetConfig $SelectedModel;
     #-------------------------------------------------------------------------------------------------
-    cp -f $ProjectsPath/$SelectedModel/sbin/* ./target/linux/$ModelTarget/base-files/sbin/
-    cp -f $ProjectsPath/$SelectedModel/uci-defaults/* ./target/linux/$ModelTarget/base-files/etc/uci-defaults/
-    cp -rf $ProjectsPath/$SelectedModel/etc ./files/
+    cp -rf $ProjectsPath/$SelectedModel/sbin/* ./target/linux/$ModelTarget/base-files/sbin/
+    cp -rf $ProjectsPath/$SelectedModel/uci-defaults/* ./target/linux/$ModelTarget/base-files/etc/uci-defaults/
+    cp -rf $ProjectsPath/$SelectedModel/files/* ./files/
 
-    API_FOLDER=$ProjectsPath/$SelectedModel/usr/
-    if [ -d "$API_FOLDER" ]; then
-        mkdir -p ./files/usr/
-        rsync -av --exclude='**/doc/' "$API_FOLDER" ./files/usr/
-    fi;
+#     API_FOLDER=$ProjectsPath/$SelectedModel/usr/
+#     if [ -d "$API_FOLDER" ]; then
+#         mkdir -p ./files/usr/
+#         rsync -av --exclude='**/doc/' "$API_FOLDER" ./files/usr/
+#     fi;
     #-------------------------------------------------------------------------------------------------
     if [ -z "$CompilationMode" ];then
         echo "[error] Compilation mode didn't selected"
@@ -104,7 +104,8 @@ function MakeSelectedModel(){
         make -j$(nproc)
     fi;
     mkdir -p FirmwareBin/
-    cp ./bin/targets/$ModelTarget/mt7621/*-sysupgrade.bin ./FirmwareBin/$SelectedModel-$(date +"%d%m%y_%H%M%S").bin
+    ResultBin=$(find bin/targets/ramips/ -path "*$(echo "$SelectedModel" | cut -d'-' -f2)*" | grep ".bin")
+    mv $ResultBin ./FirmwareBin/$SelectedModel-$(date +"%d%m%y_%H%M%S").bin
     ClearModelCache $ModelTarget 2>/dev/null;
 };
 

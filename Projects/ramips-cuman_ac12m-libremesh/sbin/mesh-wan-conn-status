@@ -1,0 +1,13 @@
+#!/bin/bash
+
+WANPortInfo=$(swconfig dev switch0 port 4 show | tail -n1)
+IsWANPortConnected="false";
+IsInternetConnExist="false";
+if [[ $WANPortInfo == *"link:up"* ]]; then
+    IsWANPortConnected="true";
+fi;
+if ping -W 2 -c 1 8.8.8.8 &> /dev/null; then
+    IsInternetConnExist="true";
+fi;
+jq -n --argjson wanConn $IsWANPortConnected --argjson internetConn $IsInternetConnExist \
+    '{IsWANPortConnected: $wanConn, IsInternetConnExist: $internetConn}'

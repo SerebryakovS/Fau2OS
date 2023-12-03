@@ -1,0 +1,32 @@
+#!/bin/bash
+
+SelectedNetworkProfile=$(uci get fmesh.core.network_profile)
+LimeConfig="lime-community"
+
+ManageProtocol() {
+    local Protocol="$1"
+    local Include="$2"
+    if uci show $LimeConfig | grep -q "$Protocol"; then
+        if [ "$Include" = false ]; then
+            uci del_list $LimeConfig.network.protocols="$Protocol"
+            uci commit $LimeConfig
+        fi;
+    else
+        if [ "$Include" = true ]; then
+            uci add_list $LimeConfig.network.protocols="$Protocol"
+            uci commit $LimeConfig
+        fi;
+    fi;
+}
+
+if [[ $SelectedNetworkProfile == *"bat"* ]]; then
+    ManageProtocol "batadv:%N1" true
+else
+    ManageProtocol "batadv:%N1" false
+fi
+
+if [[ $SelectedNetworkProfile == *"bmx"* ]]; then
+    ManageProtocol "bmx7:18" true
+else
+    ManageProtocol "bmx7:18" false
+fi

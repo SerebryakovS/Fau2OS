@@ -1,0 +1,19 @@
+#!/bin/bash
+
+NeighborOutput=$(batctl neighbors | awk '/wlan1-mesh_[0-9]+[[:space:]]+fau2_[a-f0-9]+_wlan1_mesh_[0-9]+/ {print $2}')
+ExistingLinks=()
+
+while read -r NeighborString; do
+    M5_hex=$(echo "$NeighborString" | awk -F'_' '{print substr($2, 1, 2)}')
+    M6_hex=$(echo "$NeighborString" | awk -F'_' '{print substr($2, 3)}')
+    M5_dec=$((16#$M5_hex))
+    M6_dec=$((16#$M6_hex))
+    N1=$(ifconfig br-lan | awk '/inet / {split($2, a, "."); print a[2]}')
+    N2=$(ifconfig br-lan | awk '/inet / {split($2, a, "."); print a[3]}')
+    IPv4Address="10.$N1.$M5_dec.$M6_dec"
+    Hostname="fau2-$M5_hex$M6_hex"
+    ExistingLink="{\"Hostname\":\"$Hostname\",\"IPv4Address\":\"$IPv4Address\"}"
+    ExistingLinks+=("$ExistingLink")
+done <<< "$NeighborOutput"
+OutputJson="{\"Nodes\":[$(IFS=, ; echo "${ExistingLinks[*]}")]}"
+echo "$OutputJson" | jq .

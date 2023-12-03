@@ -1,0 +1,25 @@
+#!/bin/bash
+
+MeshNodesSearchScript=$1
+MeshNodes=$(/sbin/"$MeshNodesSearchScript")
+NewHosts=$(echo "$MeshNodes" | jq -r '.links[] | "\(.IPv4) \(.Hostname)"')
+IsNewRecordsFound=false
+cp /etc/hosts /etc/hosts.backup
+grep -v 'fau2-' /etc/hosts > /etc/hosts.temp
+while IFS= read -r Line; do
+    Ip=$(echo "$Line" | awk '{print $1}');
+    Hostname=$(echo "$Line" | awk '{print $2}')
+    if ! grep -q "$Hostname" /etc/hosts; then
+        IsNewRecordsFound=true;
+    fi;
+    echo "$Ip $Hostname" >> /etc/hosts.temp;
+done <<< "$NewHosts";
+mv /etc/hosts.temp /etc/hosts;
+if [ "$IsNewRecordsFound" = true ]; then
+    shared-state sync dnsmasq-leases &> /dev/null
+    shared-state sync dnsmasq-hosts &> /dev/null
+    shared-state-publish-all
+    for dataFile in /var/shared-state/data/* ; do
+        shared-state bleach $(basename $dataFile .json);
+    done &> /dev/null
+fi;

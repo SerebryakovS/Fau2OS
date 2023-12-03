@@ -687,19 +687,19 @@ TARGET_DEVICES += zbt-wg3526-32M
 #############################################################################
 #############################################################################
 
-define Device/cuman-ac12m-gpa
+define Device/cuman_ac12m-gpa
     DTS := CUMAN-AC12M-GPA
     IMAGE_SIZE := $(ralink_default_fw_size_32M)
     DEVICE_TITLE := Cuman mesh device Ver.1 (libremesh)
     DEVICE_PACKAGES := \
         kmod-sdhci-mt7620 kmod-mt7603 kmod-mt76x2 kmod-mtd-rw \
 	nano bash iperf3 tcpdump htop wpad-mesh-wolfssl \
-	luci-nginx luci-compat luci-app-cpu-status-mini \
+	luci luci-compat luci-app-cpu-status-mini \
 	lime-app lime-proto-anygw lime-proto-batadv lime-proto-bmx7 lime-proto-wan \
-	lime-system lime-webui profile-freifunk-80211s-sae-bmx7-batadv \
-	ubus-lime-batman-adv ubus-lime-grondrouting ubus-lime-metrics ubus-lime-utils
+	lime-system profile-freifunk-80211s-sae-bmx7-batadv \
+	fau2os-json-rpc-api luci-app-fau2os-setup-wizard luci-theme-fau2os
 endef
-TARGET_DEVICES += cuman-ac12m-gpa
+TARGET_DEVICES += cuman_ac12m-gpa
 
 
 
