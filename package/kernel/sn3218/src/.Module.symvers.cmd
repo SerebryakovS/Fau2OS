@@ -1,0 +1,1 @@
+cmd_/dr1/fau2os/package/kernel/sn3218/src/Module.symvers := sed 's/ko$$/o/' /dr1/fau2os/package/kernel/sn3218/src/modules.order | scripts/mod/modpost -m    -o /dr1/fau2os/package/kernel/sn3218/src/Module.symvers -e -i Module.symvers   -T -

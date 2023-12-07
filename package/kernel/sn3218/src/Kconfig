@@ -1,0 +1,6 @@
+config SN3218
+	tristate "Kernel module for sn3218 led driver control"
+	select SN3218_MODULE
+	help
+	  Say Y if you want to include module into the build
+

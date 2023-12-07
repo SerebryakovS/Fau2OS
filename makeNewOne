@@ -36,6 +36,15 @@ function GetBuildModel(){
     fi;
 };
 
+function GenerateBanner(){
+    BannerFile="./package/base-files/files/etc/banner";
+    cp Banner.default $BannerFile;
+    SelectedModel=$1;
+    CurrentDate=$(date +"%Y-%m-%d")
+    echo "| Release info: $CurrentDate, $SelectedModel" >> $BannerFile
+    echo "|----------------------------------------------------------|" >> $BannerFile
+};
+
 function GetModelTarget(){
     local SelectedModel=$1; echo ${SelectedModel%%-*};
 };
@@ -78,6 +87,7 @@ function MakeSelectedModel()    {
         exit $EXIT_SUCCESS;
     fi;
     SelectedModel=$(GetBuildModel $ModelNum);
+    GenerateBanner $SelectedModel;
     ModelTarget=$(GetModelTarget $SelectedModel);
     ClearBuildArtifacts $ModelTarget 2>/dev/null;
     GetConfig $SelectedModel;
@@ -137,5 +147,5 @@ function main(){
             ;;
     esac;
     exit $EXIT_SUCCESS;
-}
+};
 main "$@" # <--- entryPoint
