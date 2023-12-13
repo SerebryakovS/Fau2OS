@@ -1,6 +1,0 @@
-root@fau2-7aad:/# echo 5 >/sys/class/gpio/export
-root@fau2-7aad:/# echo out >/sys/class/gpio/gpio5/direction
-root@fau2-7aad:/# echo 1 >/sys/class/gpio/gpio5/value
-root@fau2-7aad:/# mesh-led-controller random
------------------------------------------------------------
-https://yhbt.net/lore/all/56AB6103.6010702@samsung.com/T/

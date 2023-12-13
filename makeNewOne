@@ -10,6 +10,7 @@ ProjectsPath=$(pwd)/Projects
 TargetList=(
     "Build-All"
     "ramips-skylab_skw92a-libremesh"
+    "ramips-cuman_ac12g-libremesh"
     "ramips-cuman_ac12m-libremesh"
 );
 

@@ -1,0 +1,125 @@
+#!/bin/bash
+
+ManageProtocol() {
+        LimeConfig="lime-community";
+        local Protocol="$1";
+        local Include="$2";
+        if uci show $LimeConfig | grep -q "$Protocol"; then
+                if [ "$Include" = false ]; then
+                        uci del_list $LimeConfig.network.protocols="$Protocol";
+                fi;
+        else
+                if [ "$Include" = true ]; then
+                        uci add_list $LimeConfig.network.protocols="$Protocol";
+                fi;
+        fi;
+        uci commit $LimeConfig;
+}
+
+NodeProfileConf(){
+        SelectedNetworkProfile=$(uci get fmesh.core.network_profile)
+        if [[ $SelectedNetworkProfile == *"bat"* ]]; then
+                ManageProtocol "batadv:%N1" true
+        else
+                ManageProtocol "batadv:%N1" false
+        fi;
+        if [[ $SelectedNetworkProfile == *"bmx"* ]]; then
+                uci set luci-bmx7.luci.ignore="0"
+                ManageProtocol "bmx7:18" true
+        else
+                uci set luci-bmx7.luci.ignore="1"
+                ManageProtocol "bmx7:18" false
+        fi;
+        uci commit luci-bmx7;
+        lime-config && lime-apply
+        /etc/init.d/rpcd restart
+}
+#############################################################################################
+MT7621EepromOffset=$((0x8000));
+ReadByteFromEeprom() {
+    local Filepath="$1"; local BaseOffset=$2;
+    local ActualOffset=$((MT7621EepromOffset + BaseOffset));
+    dd if="$Filepath" bs=1 skip="$ActualOffset" count=1 2>/dev/null | xxd -p  | xargs
+}
+WriteByteToEeprom() {
+    local Filepath="$1"; local BaseOffset=$2;
+    local Value=$(printf "%02x" "$3");
+    local ActualOffset=$((MT7621EepromOffset + BaseOffset));
+    printf "\\x$Value" | dd of="$Filepath" bs=1 seek="$ActualOffset" count=1 conv=notrunc
+}
+#############################################################################################
+
+NodeEpalnaConf(){
+    Filepath="$1"
+    IsConfigured="false"
+    ValueToSet0x25="40"; ValueDefault0x25="00";
+    ValueToSet0x35="fc"; ValueDefault0x35="ff";
+    ValueToSet0x36="0c"; ValueDefault0x36="00";
+    CurrValue0x25=$(ReadByteFromEeprom $Filepath 0x25);
+    CurrValue0x35=$(ReadByteFromEeprom $Filepath 0x35);
+    CurrValue0x36=$(ReadByteFromEeprom $Filepath 0x36);
+
+    MeshIfaceEpalnaSetting=$(uci get fmesh.core.epalna);
+    if [ "$MeshIfaceEpalnaSetting" = "1" ]; then
+        echo "[FAU2OS-utils]: EpaLna should be set, verifying current configuration..." > /dev/kmsg
+        [[ "$CurrValue0x25" != "$ValueToSet0x25" ]] && WriteByteToEeprom $Filepath 0x25 "0x"$ValueToSet0x25 && IsConfigured="true"
+        [[ "$CurrValue0x35" != "$ValueToSet0x35" ]] && WriteByteToEeprom $Filepath 0x35 "0x"$ValueToSet0x35 && IsConfigured="true"
+        [[ "$CurrValue0x36" != "$ValueToSet0x36" ]] && WriteByteToEeprom $Filepath 0x36 "0x"$ValueToSet0x36 && IsConfigured="true"
+    elif [ "$MeshIfaceEpalnaSetting" = "0" ]; then
+        echo "[FAU2OS-utils]: EpaLna should NOT be set, verifying current configuration..." > /dev/kmsg
+        [[ "$CurrValue0x25" != "$ValueDefault0x25" ]] && WriteByteToEeprom $Filepath 0x25 "0x"$ValueDefault0x25 && IsConfigured="true"
+        [[ "$CurrValue0x35" != "$ValueDefault0x35" ]] && WriteByteToEeprom $Filepath 0x35 "0x"$ValueDefault0x35 && IsConfigured="true"
+        [[ "$CurrValue0x36" != "$ValueDefault0x36" ]] && WriteByteToEeprom $Filepath 0x36 "0x"$ValueDefault0x36 && IsConfigured="true"
+    else
+        echo "[FAU2OS-utils]: Invalid EpaLna setting: $MeshIfaceEpalnaSetting" > /dev/kmsg;
+    fi;
+    echo $IsConfigured;
+}
+NodeIndexConf(){
+        Filepath="/root/eeprom.bin"
+        dd if=/dev/mtd2 of=$Filepath
+        DefaultMAC=$( dd if=$Filepath bs=1 skip=$((0xe000)) count=6 | xxd -p );
+        DefaultMAC=$(echo "$DefaultMAC" | xargs);
+        NodeId="$(uci get fmesh.core.node_id_one)$(uci get fmesh.core.node_id_two)"
+        NewMACPart=$(echo "$NodeId" | awk '{print tolower($0)}');
+        InitialPartLength=$((${#DefaultMAC}-${#NewMACPart}))
+        IsMacConfigured="false";
+        if [ "${DefaultMAC:InitialPartLength}" = "$NewMACPart" ];then
+                echo "[FAU2OS-utils]: Node Id didn't changed because it's correct" > /dev/kmsg
+        else
+            IsMacConfigured="true"
+            InitialPart=${DefaultMAC:0:InitialPartLength}
+            NewMAC="$InitialPart$NewMACPart"
+            echo "[FAU2OS-utils]: Rewriting $DefaultMAC --> $NewMAC" > /dev/kmsg
+            LimeReconfScript="/etc/uci-defaults/lime-reconf.sh"
+cat << EOF > "$LimeReconfScript"
+#!/bin/bash
+uci set network.lan_eth0_1_dev.macaddr="$(cat /sys/class/ieee80211/phy0/macaddress)"
+uci set network.wan_eth0_2_dev.macaddr="$(cat /sys/class/ieee80211/phy1/macaddress)"
+uci commit network
+lime-config && lime-apply
+rm $Filepath
+/etc/init.d/network restart
+EOF
+            chmod +x "$LimeReconfScript"
+            NewMACBinary=$(echo -n $NewMAC | sed 's/\(..\)/\\x\1/g')
+            echo -ne $NewMACBinary | dd of=$Filepath bs=1 seek=$((0xe000)) conv=notrunc
+        fi;
+        IsEpalnaConfigured=$(NodeEpalnaConf $Filepath);
+        echo "[FAU2OS-utils]: Current flags IsEpalnaConfigured=$IsEpalnaConfigured, IsMacConfigured=$IsMacConfigured" > /dev/kmsg;
+        if [ "$IsEpalnaConfigured" = "true" ] || [ "$IsMacConfigured" = "true" ]; then
+            echo "[FAU2OS-utils]: EEPROM updated. Reset required.." > /dev/kmsg;
+            insmod mtd-rw.ko i_want_a_brick=1
+            mtd -r write $Filepath factory
+        else
+            echo "[FAU2OS-utils]: Everything is already configured. Nothing to do.." > /dev/kmsg;
+        fi;
+}
+
+if [ "$1" = "index" ];then
+        NodeIndexConf $2
+elif [ "$1" = "profile" ]; then
+        NodeProfileConf
+else
+        echo "you should specify the role. Usage: $0 index | profile"
+fi;

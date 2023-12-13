@@ -690,16 +690,29 @@ TARGET_DEVICES += zbt-wg3526-32M
 define Device/cuman_ac12m-gpa
     DTS := CUMAN-AC12M-GPA
     IMAGE_SIZE := $(ralink_default_fw_size_32M)
-    DEVICE_TITLE := Cuman mesh device Ver.1 (libremesh)
+    DEVICE_TITLE := Cuman mesh-only device
     DEVICE_PACKAGES := \
         kmod-sdhci-mt7620 kmod-mt7603 kmod-mt76x2 kmod-mtd-rw \
 	nano bash iperf3 tcpdump htop wpad-mesh-wolfssl \
 	luci luci-compat luci-app-cpu-status-mini \
 	lime-app lime-proto-anygw lime-proto-batadv lime-proto-bmx7 lime-proto-wan \
 	lime-system profile-freifunk-80211s-sae-bmx7-batadv \
-	fau2os-json-rpc-api luci-app-fau2os-setup-wizard luci-theme-fau2os
+	fau2os-json-rpc-api luci-app-fau2os-setup-wizard luci-theme-fau2os \
+	sn3218-user-control kmod-sn3218 fau2os-conf-and-tools-cuman-ac12x
 endef
 TARGET_DEVICES += cuman_ac12m-gpa
 
-
-
+define Device/cuman_ac12g-spectra
+    DTS := CUMAN-AC12G-SPECTRA
+    IMAGE_SIZE := $(ralink_default_fw_size_32M)
+    DEVICE_TITLE := Cuman default dual band router labeled as spectra
+    DEVICE_PACKAGES := \
+        kmod-sdhci-mt7620 kmod-mt7603 kmod-mt76x2 kmod-mtd-rw \
+	nano bash iperf3 tcpdump htop wpad-mesh-wolfssl \
+	luci luci-compat luci-app-cpu-status-mini \
+	lime-app lime-proto-anygw lime-proto-batadv lime-proto-bmx7 lime-proto-wan \
+	lime-system profile-freifunk-80211s-sae-bmx7-batadv \
+	fau2os-json-rpc-api luci-app-fau2os-setup-wizard luci-theme-fau2os \
+	fau2os-conf-and-tools-cuman-ac12x
+endef
+TARGET_DEVICES += cuman_ac12g-spectra

@@ -4,7 +4,7 @@ WizardMap.template = "cbi/mWizardMap"
 WizardMap.apply_on_parse = true
 
 WizardMap.on_after_apply = function(self)
-    luci.sys.call("mesh-conf profile && mesh-conf index")
+    luci.sys.call("mesh-conf profile && mesh-conf index &")
 end
 
 SystemSection = WizardMap:section(TypedSection, "system", "System settings")

@@ -1,0 +1,6 @@
+ 
+config system 'core'
+        option node_id_one 'FF'
+        option node_id_two 'FF'
+        option network_profile 'bat+bmx'
+        option epalna '1'

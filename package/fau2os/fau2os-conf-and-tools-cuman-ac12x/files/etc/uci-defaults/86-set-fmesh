@@ -1,0 +1,7 @@
+#!/bin/bash
+
+DefaultMAC=$( dd if=/dev/mtd2 bs=1 skip=$((0xe000)) count=6 | xxd -p );
+uci set fmesh.core.node_id_one=$(echo "${DefaultMAC:8:2}" | awk '{print toupper($0)}')
+uci set fmesh.core.node_id_two=$(echo ${DefaultMAC:10:2} | awk '{print toupper($0)}')
+
+uci commit fmesh
