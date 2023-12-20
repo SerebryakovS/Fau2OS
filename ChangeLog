@@ -25,3 +25,24 @@ ACTIONS:
     0010. Разделены профили для ac12g и ac12m(для дальнейшей правки DTS и включения sn3218)
     0011. В баннер включена информация по профилю и дате релиза
     0012. Исправлены поддержки модели в DTS, теперь предупреждений нет при перезаливке прошивки
+
+
+grep -Rns "cuman:green:power-g" ./*
+./build_dir/target-mipsel_24kc_musl/linux-ramips_mt7621/base-files/.pkgdir/base-files/bin/sysdef:88:    uci set system.@led[0].sysfs='cuman:green:power-g'
+./build_dir/target-mipsel_24kc_musl/linux-ramips_mt7621/base-files/.pkgdir/base-files/bin/sysdef:101:   uci set system.@led[8].sysfs='cuman:green:power-g'
+./build_dir/target-mipsel_24kc_musl/linux-ramips_mt7621/base-files/ipkg-mipsel_24kc/base-files/bin/sysdef:88:   uci set system.@led[0].sysfs='cuman:green:power-g'
+./build_dir/target-mipsel_24kc_musl/linux-ramips_mt7621/base-files/ipkg-mipsel_24kc/base-files/bin/sysdef:101:  uci set system.@led[8].sysfs='cuman:green:power-g'
+./build_dir/target-mipsel_24kc_musl/root.orig-ramips/bin/sysdef:88:     uci set system.@led[0].sysfs='cuman:green:power-g'
+./build_dir/target-mipsel_24kc_musl/root.orig-ramips/bin/sysdef:101:    uci set system.@led[8].sysfs='cuman:green:power-g'
+./build_dir/target-mipsel_24kc_musl/root-ramips/bin/sysdef:88:  uci set system.@led[0].sysfs='cuman:green:power-g'
+./build_dir/target-mipsel_24kc_musl/root-ramips/bin/sysdef:101: uci set system.@led[8].sysfs='cuman:green:power-g'
+./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-GLTE-V11.dts:44:                   label = "cuman:green:power-g";
+./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-G-V12.dts:44:                      label = "cuman:green:power-g";
+./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-G-V11.dts:44:                      label = "cuman:green:power-g";
+./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-G-V13-A2.dts:49:                   label = "cuman:green:power-g";
+./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-GLTE-V14-A2.dts:49:                        label = "cuman:green:power-g";
+./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-G-V14-A2.dts:49:                   label = "cuman:green:power-g";
+./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-GLTE-V12.dts:44:                   label = "cuman:green:power-g";
+./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-GLTE-V13-A2.dts:49:                        label = "cuman:green:power-g";
+./target/linux/ramips/mt7621/base-files/bin/sysdef:88:  uci set system.@led[0].sysfs='cuman:green:power-g'
+./target/linux/ramips/mt7621/base-files/bin/sysdef:101: uci set system.@led[8].sysfs='cuman:green:power-g'
