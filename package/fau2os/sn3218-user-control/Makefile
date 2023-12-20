@@ -9,7 +9,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/sn3218-user-control
 	CATEGORY:=Fau2
 	TITLE:=sn3218-user-control
-	DEPENDS:=+kmod-i2c-core
+	DEPENDS:=+kmod-i2c-core +i2c-tools
 endef
 
 define Package/helloworld/description

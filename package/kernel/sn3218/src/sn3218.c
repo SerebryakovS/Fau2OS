@@ -1,7 +1,7 @@
 /*
  * Si-En SN3218 18 Channel LED Driver
  *
- * Copyright (C) 2016 Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>
+ * Copyright (C) 2016 Stefan Wahren <stefan.wahren@i2se.com>
  *
  * Based on leds-pca963x.c
  *
@@ -21,7 +21,7 @@
 #include <linux/of.h>
 #include <linux/slab.h>
 
-#define SN3218_MODE         0x00
+#define SN3218_MODE			0x00
 #define SN3218_PWM_BASE		0x01
 #define SN3218_LED_BASE		0x13	/* 6 channels per reg */
 #define SN3218_UPDATE		0x16	/* applies to reg 0x01 .. 0x15 */
@@ -31,7 +31,7 @@
 #define SN3218_LED_ON		0x01
 #define SN3218_LED_OFF		0x00
 
-#define NUM_LEDS		      18
+#define NUM_LEDS			18
 
 static const struct i2c_device_id sn3218_id[] = {
 	{ "sn3218", 0 },
@@ -250,5 +250,5 @@ static struct i2c_driver sn3218_driver = {
 module_i2c_driver(sn3218_driver);
 
 MODULE_DESCRIPTION("Si-En SN3218 LED Driver");
-MODULE_AUTHOR("Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>");
+MODULE_AUTHOR("Stefan Wahren <stefan.wahren@i2se.com>");
 MODULE_LICENSE("GPL");
