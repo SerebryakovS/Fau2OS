@@ -37,6 +37,30 @@
 		};
 	};
 
+	######################################
+	sn3218@54 {
+		compatible = "si-en,sn3218";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x54>;
+
+		led1@0 {
+			label = "led1";
+			reg = <0x0>;
+		};
+
+		led2@1 {
+			label = "led2";
+			reg = <0x1>;
+		};
+
+		led3@2 {
+			label = "led3";
+			reg = <0x2>;
+		};
+	};
+	######################################
+
 	leds {
 		compatible = "gpio-leds";
 
