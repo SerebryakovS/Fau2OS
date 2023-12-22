@@ -9,8 +9,10 @@ include $(INCLUDE_DIR)/package.mk
 define KernelPackage/sn3218
 	SUBMENU:=Other modules
 	TITLE:=SN3218 LED driver
+	DEPENDS:=@TARGET_ramips +kmod-i2c-core
+	#AUTOLOAD:=$(call AutoProbe,sn3218)
+	AUTOLOAD:=$(call AutoLoad,60,sn3218)
 	FILES:=$(PKG_BUILD_DIR)/sn3218.ko
-	AUTOLOAD:=$(call AutoProbe,sn3218)
 endef
 
 define KernelPackage/sn3218/description
@@ -31,7 +33,10 @@ MAKE_OPTS:= \
 	$(EXTRA_KCONFIG)
 
 define Build/Compile
-	$(MAKE) -C $(LINUX_DIR) $(MAKE_OPTS) M=$(PKG_BUILD_DIR) modules
+	$(MAKE) -C "$(LINUX_DIR)" \
+		$(MAKE_OPTS) \
+		modules
 endef
+
 
 $(eval $(call KernelPackage,sn3218))

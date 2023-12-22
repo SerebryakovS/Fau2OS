@@ -9,12 +9,14 @@
 	compatible = "cuman,ac12m-gpa","mediatek,mt7621-soc";
 	model = "Cuman-AC12M-GPA";
 
+	/*
 	aliases {
 		led-boot = &led_power_g;
 		led-failsafe = &led_power_g;
 		led-running = &led_power_g;
 		led-upgrade = &led_power_g;
 	};
+	*/
 
 	chosen {
 		bootargs = "console=ttyS0,115200";
@@ -23,6 +25,25 @@
 	palmbus: palmbus@1E000000 {
 		i2c@900 {
 			status = "okay";
+
+			/*######################################*/
+			/* reg : number of LED line (could be from 0 to 17) */
+			leds: sn3218@54 {
+				compatible = "si-en,sn3218";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reg = <0x54>;
+
+				power-gpio = <&gpio0 5 GPIO_ACTIVE_HIGH>;
+
+				/*
+				led1@0 {
+					label = "led1";
+					reg = <0x0>;
+				};
+				*/
+			};
+			/*######################################*/
 		};
 	};
 
@@ -36,32 +57,7 @@
 			linux,code = <KEY_WPS_BUTTON>;
 		};
 	};
-
-	/*######################################*/
-	/* reg : number of LED line (could be from 0 to 17) */
-	sn3218@54 {
-		compatible = "si-en,sn3218";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg = <0x54>;
-
-		led1@0 {
-			label = "led1";
-			reg = <0x0>;
-		};
-
-		led2@1 {
-			label = "led2";
-			reg = <0x1>;
-		};
-
-		led3@2 {
-			label = "led3";
-			reg = <0x2>;
-		};
-	};
-	/*######################################*/
-
+	/*
 	leds {
 		compatible = "gpio-leds";
 
@@ -70,6 +66,7 @@
 			gpios = <&gpio0 31 GPIO_ACTIVE_LOW>;
 		};
 	};
+	*/
 };
 
 &sdhci {

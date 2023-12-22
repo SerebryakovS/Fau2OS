@@ -20,6 +20,8 @@
 #include <linux/mutex.h>
 #include <linux/of.h>
 #include <linux/slab.h>
+#include <linux/gpio.h>
+#include <linux/of_gpio.h>
 
 #define SN3218_MODE			0x00
 #define SN3218_PWM_BASE		0x01
@@ -53,6 +55,7 @@ struct sn3218 {
 	struct i2c_client *client;
 	struct sn3218_led *leds;
 	u8 leds_state[3];
+	int power_gpio;
 };
 
 /**
@@ -111,7 +114,6 @@ static struct led_platform_data *sn3218_init(struct i2c_client *client)
 	struct led_platform_data *pdata;
 	struct led_info *sn3218_leds;
 	int count;
-
 	count = of_get_child_count(np);
 	if (!count || count > NUM_LEDS)
 		return NULL;
@@ -151,28 +153,30 @@ static const struct of_device_id of_sn3218_match[] = {
 };
 MODULE_DEVICE_TABLE(of, of_sn3218_match);
 
-static int sn3218_probe(struct i2c_client *client,
-			const struct i2c_device_id *id)
-{
+static int sn3218_probe(struct i2c_client *client,const struct i2c_device_id *id){
 	struct led_platform_data *pdata;
 	struct sn3218 *sn3218_chip;
 	struct sn3218_led *sn3218;
 	int i, ret;
 
-	pdata = sn3218_init(client);
-	if (IS_ERR(pdata))
-		return PTR_ERR(pdata);
 
+	pdata = sn3218_init(client);
+	if (IS_ERR(pdata)){
+		printk("SN3218: sn3218_init() error\n");
+		return PTR_ERR(pdata);
+	}
 	sn3218_chip = devm_kzalloc(&client->dev, sizeof(*sn3218_chip),
 				   GFP_KERNEL);
-	if (!sn3218_chip)
+	if (!sn3218_chip){
+		//printk("SN3218: Could allocate memory for sn3218_chip, error code:%d\n",sn3218_chip);
 		return -ENOMEM;
-
+	}
 	sn3218 = devm_kzalloc(&client->dev, NUM_LEDS * sizeof(*sn3218),
 			      GFP_KERNEL);
-	if (!sn3218)
+	if (!sn3218){
+		printk("SN3218: Could allocate memory for sn3218, error code:%d\n",sn3218);
 		return -ENOMEM;
-
+	}
 	i2c_set_clientdata(client, sn3218_chip);
 
 	mutex_init(&sn3218_chip->lock);
@@ -192,7 +196,6 @@ static int sn3218_probe(struct i2c_client *client,
 				sn3218[i].led_cdev.default_trigger =
 					pdata->leds[i].default_trigger;
 		}
-
 		if (i >= pdata->num_leds || !pdata->leds[i].name) {
 			snprintf(sn3218[i].name, sizeof(sn3218[i].name),
 				 "sn3218:%d:%.2x:%d", client->adapter->nr,
@@ -204,8 +207,10 @@ static int sn3218_probe(struct i2c_client *client,
 		sn3218[i].led_cdev.max_brightness = LED_FULL;
 
 		ret = led_classdev_register(&client->dev, &sn3218[i].led_cdev);
-		if (ret < 0)
+		if (ret < 0){
+			printk("SN3218: Could not register LED, return code:%d\n",ret);
 			goto exit;
+		}
 	}
 
 	/* Reset chip to default, all LEDs off */
@@ -214,9 +219,23 @@ static int sn3218_probe(struct i2c_client *client,
 	/* Set normal mode */
 	i2c_smbus_write_byte_data(client, SN3218_MODE, 0x01);
 
+    sn3218_chip->power_gpio = of_get_named_gpio(client->dev.of_node, "power-gpio", 0);
+    if (gpio_is_valid(sn3218_chip->power_gpio)) {
+        if (gpio_request(sn3218_chip->power_gpio, "sn3218_power") < 0) {
+            dev_err(&client->dev, "Failed to request power GPIO\n");
+            return -EBUSY;
+        }
+        gpio_direction_output(sn3218_chip->power_gpio, 1);
+    }
+
 	return 0;
 
 exit:
+	printk("SN3218: Exiting probe with error\n");
+    if (gpio_is_valid(sn3218_chip->power_gpio)) {
+        gpio_set_value(sn3218_chip->power_gpio, 0);
+        gpio_free(sn3218_chip->power_gpio);
+    }
 	while (i--)
 		led_classdev_unregister(&sn3218[i].led_cdev);
 
@@ -234,12 +253,17 @@ static int sn3218_remove(struct i2c_client *client)
 	/* Set shutdown mode */
 	i2c_smbus_write_byte_data(client, SN3218_MODE, 0x00);
 
+    if (gpio_is_valid(sn3218->power_gpio)) {
+        gpio_set_value(sn3218->power_gpio, 0);
+        gpio_free(sn3218->power_gpio);
+    }
+
 	return 0;
 }
 
 static struct i2c_driver sn3218_driver = {
 	.driver = {
-		.name	= "leds-sn3218",
+		.name	= "sn3218",
 		.of_match_table = of_match_ptr(of_sn3218_match),
 	},
 	.probe	= sn3218_probe,
@@ -250,5 +274,5 @@ static struct i2c_driver sn3218_driver = {
 module_i2c_driver(sn3218_driver);
 
 MODULE_DESCRIPTION("Si-En SN3218 LED Driver");
-MODULE_AUTHOR("Stefan Wahren <stefan.wahren@i2se.com>");
+MODULE_AUTHOR("Stefan Wahren <stefan.wahren@i2se.com>, Stepan Serebryakov <serebryakov0906@gmail.com>");
 MODULE_LICENSE("GPL");

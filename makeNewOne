@@ -107,8 +107,7 @@ function MakeSelectedModel()    {
         echo "[error] Compilation mode didn't selected"
         exit $COMPILE_MODE_NOT_SET
     fi;
-    make defconfig
-    make download
+    make defconfig && make download
     if [ $CompilationMode = "debug" ];then
         make -j1 V=sc
     elif [ $CompilationMode = "release" ];then

@@ -1,7 +1,7 @@
-root@fau2-7aad:/# echo 5 >/sys/class/gpio/export
-root@fau2-7aad:/# echo out >/sys/class/gpio/gpio5/direction
-root@fau2-7aad:/# echo 1 >/sys/class/gpio/gpio5/value
-root@fau2-7aad:/# mesh-led-controller random
+echo 5 >/sys/class/gpio/export
+echo out >/sys/class/gpio/gpio5/direction
+echo 1 >/sys/class/gpio/gpio5/value
+mesh-led-controller random
 -----------------------------------------------------------
 https://yhbt.net/lore/all/56AB6103.6010702@samsung.com/T/
 
@@ -46,3 +46,11 @@ grep -Rns "cuman:green:power-g" ./*
 ./target/linux/ramips/dts/CUMAN-SPECTRA-AC12-GLTE-V13-A2.dts:49:                        label = "cuman:green:power-g";
 ./target/linux/ramips/mt7621/base-files/bin/sysdef:88:  uci set system.@led[0].sysfs='cuman:green:power-g'
 ./target/linux/ramips/mt7621/base-files/bin/sysdef:101: uci set system.@led[8].sysfs='cuman:green:power-g'
+
+mt76-phy0       sn3218:0:54:13  sn3218:0:54:3   sn3218:0:54:8
+mt76-phy1       sn3218:0:54:14  sn3218:0:54:4   sn3218:0:54:9
+sn3218:0:54:10  sn3218:0:54:15  sn3218:0:54:5   sn3218:led1
+sn3218:0:54:11  sn3218:0:54:16  sn3218:0:54:6   sn3218:led2
+sn3218:0:54:12  sn3218:0:54:17  sn3218:0:54:7   sn3218:led3
+
+

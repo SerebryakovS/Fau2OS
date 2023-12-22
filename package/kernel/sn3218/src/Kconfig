@@ -1,6 +1,7 @@
 config SN3218
-	tristate "Kernel module for sn3218 led driver control"
-	select SN3218_MODULE
+	tristate "LED support for Si-En SN3218 I2C chip"
+	depends on LEDS_CLASS && I2C
+	depends on OF
 	help
-	  Say Y if you want to include module into the build
-
+	  This option enables support for the Si-EN SN3218 LED driver
+	  through I2C. Say Y to enable support for the SN3218 LED.
