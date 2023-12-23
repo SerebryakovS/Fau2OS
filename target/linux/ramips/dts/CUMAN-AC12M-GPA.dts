@@ -9,14 +9,13 @@
 	compatible = "cuman,ac12m-gpa","mediatek,mt7621-soc";
 	model = "Cuman-AC12M-GPA";
 
-	/*
+
 	aliases {
-		led-boot = &led_power_g;
-		led-failsafe = &led_power_g;
-		led-running = &led_power_g;
-		led-upgrade = &led_power_g;
+		led-boot = &sn3218_led16;
+		led-failsafe = &sn3218_led16;
+		led-running = &sn3218_led16;
+		led-upgrade = &sn3218_led16;
 	};
-	*/
 
 	chosen {
 		bootargs = "console=ttyS0,115200";
@@ -34,16 +33,89 @@
 				#size-cells = <0>;
 				reg = <0x54>;
 
-				power-gpio = <&gpio0 5 GPIO_ACTIVE_HIGH>;
-
-				/*
-				led1@0 {
-					label = "led1";
+				sn3218_led00: led00@0 {
+					label = "sn3218_led_reg_00";
 					reg = <0x0>;
 				};
-				*/
+				sn3218_led01: led01@1 {
+					label = "sn3218_led_reg_01";
+					reg = <0x1>;
+				};
+				sn3218_led02: led02@2 {
+					label = "sn3218_led_reg_02";
+					reg = <0x2>;
+				};
+				sn3218_led03: led03@3 {
+					label = "sn3218_led_reg_03";
+					reg = <0x3>;
+				};
+				sn3218_led04: led04@4 {
+					label = "sn3218_led_reg_04";
+					reg = <0x4>;
+				};
+				sn3218_led05: led05@5 {
+					label = "sn3218_led_reg_05";
+					reg = <0x5>;
+				};
+				sn3218_led06: led106@6 {
+					label = "sn3218_led_reg_06";
+					reg = <0x6>;
+				};
+				sn3218_led07: led07@7 {
+					label = "sn3218_led_reg_07";
+					reg = <0x7>;
+				};
+				sn3218_led08: led08@8 {
+					label = "sn3218_led_reg_08";
+					reg = <0x8>;
+				};
+				sn3218_led09: led09@9 {
+					label = "sn3218_led_reg_09";
+					reg = <0x9>;
+				};
+				sn3218_led10: led10@10 {
+					label = "sn3218_led_reg_10";
+					reg = <0xA>;
+				};
+				sn3218_led11: led11@11 {
+					label = "sn3218_led_reg_11";
+					reg = <0xB>;
+				};
+				sn3218_led12: led12@12 {
+					label = "sn3218_led_reg_12";
+					reg = <0xC>;
+				};
+				sn3218_led13: led13@13 {
+					label = "sn3218_led_reg_13";
+					reg = <0xD>;
+				};
+				sn3218_led14: led14@14 {
+					label = "sn3218_led_reg_14";
+					reg = <0xE>;
+				};
+				sn3218_led15: led15@15 {
+					label = "sn3218_led_reg_15";
+					reg = <0xF>;
+				};
+				sn3218_led16: led16@16 {
+					label = "sn3218_led_reg_16";
+					reg = <0x10>;
+				};
+				sn3218_led17: led17@17 {
+					label = "sn3218_led_reg_17";
+					reg = <0x11>;
+				};
+
 			};
 			/*######################################*/
+		};
+	};
+
+	sn3218_activator {
+		compatible = "gpio-leds";
+		sn3218_on_pin {
+			label = "sn3218_on_pin";
+			gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
 		};
 	};
 
@@ -57,16 +129,8 @@
 			linux,code = <KEY_WPS_BUTTON>;
 		};
 	};
-	/*
-	leds {
-		compatible = "gpio-leds";
 
-		led_power_g: power-g {
-			label = "cuman:green:power-g";
-			gpios = <&gpio0 31 GPIO_ACTIVE_LOW>;
-		};
-	};
-	*/
+
 };
 
 &sdhci {

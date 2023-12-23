@@ -2,29 +2,35 @@
 
 uci add system led
 uci set system.@led[0].name='wan'
-uci set system.@led[0].sysfs='sn3218:0:54:0'
+uci set system.@led[0].sysfs='sn3218:sn3218_led_reg_00'
 uci set system.@led[0].default='0'
 uci set system.@led[0].trigger='switch0'
 uci set system.@led[0].port_mask='0x10'
 
 uci add system led
 uci set system.@led[1].name='lan4'
-uci set system.@led[1].sysfs='sn3218:0:54:4'
+uci set system.@led[1].sysfs='sn3218:sn3218_led_reg_04'
 uci set system.@led[1].default='0'
 uci set system.@led[1].trigger='switch0'
 uci set system.@led[1].port_mask='8'
 
 uci add system led
 uci set system.@led[2].name='wlan0'
-uci set system.@led[2].sysfs='sn3218:0:54:9'
+uci set system.@led[2].sysfs='sn3218:sn3218_led_reg_09'
 uci set system.@led[2].default='0'
 uci set system.@led[2].trigger='phy0tpt'
 
 uci add system led
 uci set system.@led[3].name='wlan1'
-uci set system.@led[3].sysfs='sn3218:0:54:12'
+uci set system.@led[3].sysfs='sn3218:sn3218_led_reg_12'
 uci set system.@led[3].default='0'
 uci set system.@led[3].trigger='phy1tpt'
+
+uci add system led
+uci set system.@led[4].name='sn3218_driver_on'
+uci set system.@led[4].sysfs='sn3218_on_pin'
+uci set system.@led[4].default='1'
+uci set system.@led[4].trigger='none'
 
 uci commit system
 
