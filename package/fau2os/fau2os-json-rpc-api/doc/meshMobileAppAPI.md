@@ -1,22 +1,77 @@
 
-## Mesh System API
+## Meshok System RestAPI V1.0
 All backend implementation is located in: /usr/libexec/rpcd/mesh
 The package uhttpd-mod-ubus must be installed before using described API
-Following api calls are used for getting information from single mesh router. So, as very first step it's required to obtain IP addresses for next supported hostnames:
-```
-AvailableHostnames = [ "mesh_master", "mesh_slave_1", "mesh_slave_2" ]
-```
-##### ubus call mesh GetMeshConnInfo
-This call is used to retrieve information about internal wireless mesh links:
+--------------------
+### Mesh Network API
+--------------------
+##### ubus call mesh GetMeshNetworkOverview '{ "SearchFrom" : "..." }'
+This call is used to get fast mesh network overview to build the round map:
 ```
 {
-    "MeshConnections" : [
+    "Success" : true,
+    "MeshNodes" : [
         {
-            "MACAddress" : "...",
-            "IPAddress" : "...",
-            "Hostmame" : "...", # one of the AvailableHostnames
-            "SignalPower" : "...",
-            "LinkRates" : { #[MBit/s]
+            "HopsToMe" : "...", // 0 - for closest
+            "NetworkDeviceInfo" : {
+                "MACAddress" : "...",
+                "IPAddress" : "...",
+                "Hostmame" : "..."
+            }
+        },
+        ...
+    ]
+}
+```
+##### ubus call mesh GetMeshNetworkDirectLinksMap '{ "SearchFrom" : "...", "RoutesDepth" : "..." }'
+This call is used to get all connection chains in mesh network relatively to closest node:
+```
+{
+    "Success" : true,
+    "MeshLinksChains" : [
+        {
+            "Hostname" : "...",
+            "WirelessSignalPowerRatio" : "...",
+            "LinkStatus" : {
+                "RxBitrate" : "...",
+                "TxBitrate" : "...",
+                "ExpectedThroughput" : "..."
+            },
+            "NextLink" : {
+                ...
+            }
+        },
+        ...
+    ]
+}
+```
+##### ubus call mesh GetMeshNetworkWANStatus '{ "SearchFrom" : "...", "RoutesDepth" : "..." }'
+This call is used to get all available WAN connection in specified mesh network routes depth:
+```
+{
+    "Success" : true,
+    "IsInternetConnExist" : "true" | "false",
+    "WANConnections": [
+        <MeshNodeHostname>, ...
+    ]
+}
+```
+##### ubus call mesh GetMeshNetworkClientsInfo
+This call is used to retrieve information about all clients currently connected to the specific mesh node APs:
+```
+{
+    "Success" : true,
+    "ActiveClients": [
+        {
+            "ClosestNodeHostname" : "...",
+            "NetworkDeviceInfo" : {
+                "MACAddress" : "...",
+                "IPAddress" : "...",
+                "Hostmame" : "..."
+            },
+            "ConnectionType" : "2ghz" | "5ghz" | "eth",
+            "WirelessSignalPowerRatio" : "...", # empty for eth
+            "LinkStatus" : {
                 "RxBitrate" : "...",
                 "TxBitrate" : "...",
                 "ExpectedThroughput" : "..."
@@ -24,55 +79,66 @@ This call is used to retrieve information about internal wireless mesh links:
         },
         ...
     ],
-}
-```
-The main idea is to retrieve connection information from every mesh node one by one in order to get full system information
-##### ubus call mesh GetInetConnInfo
-This call is used to retrieve information about internet connection speeds measured on mesh point. Getting response **may take some time** because of speedtest processing:
-```
-{
-    "InternetConnection" : {
-        "Download" : "...",
-        "Upload" : "...",
-    }
-}
-```
-##### ubus call mesh GetClientsInfo
-This call is used to retrieve information about all clients currently connected to the specific mesh node APs:
-```
-{
-    "ActiveClients": [
-        {
-            "MACAddress" : "...",
-            "IPAddress" : "...",
-            "Hostmame" : "...",
-            "ConnectionInfo" : {
-                "RadioType" : "2g" | "5g",
-                "RadioChannel" : "...",
-                "SignalPower" : "...",
-                "LinkRates" : {
-                    "RxBitrate" : "...",
-                    "TxBitrate" : "...",
-                    "ExpectedThroughput" : "..."
-                }
-            }
-        },
-        ...
-    ],
     "BlockedClients":[
         {
-            "MACAddress" : "...",
-            "IPAddress" : "...",
-            "Hostmame" : "..."
+            "NetworkDeviceInfo" : {
+                "MACAddress" : "...",
+                "IPAddress" : "...",
+                "Hostmame" : "..."
+            },
+            "BlockDatetime" : "..."
         },
         ...
     ]
 }
 ```
-##### ubus call mesh DisconnectClient '{ "ClientIP" : "<CLIENT_IP>", "Block" : true | false }'
-This call is used to disconnect or reconnect(depending on "Block" option value) mesh client specified by it's IP address:
+##### ubus call mesh DisconnectMeshNetworkClient '{ "ClientIP" : "...", "Block" : "true" | "false" }'
+This call is used to disconnect permanently or reconnect(depending on "Block" option value) mesh client specified by it's IP address:
 ```
 {
     "Success" : true
 }
 ```
+------------------------
+### Single Mesh Node API
+------------------------
+##### ubus call mesh RebootMeshNode '{ "Hostname" : "..." , "ResetNetworkServicesOnly" : "true" | "false" }'
+This call is used to reboot specific mesh router (or reset it's network/wireless services depending on "ResetNetworkServicesOnly" option), specified by it's Hostname:
+```
+{
+    "Success" : "true"
+}
+```
+##### ubus call mesh ConfigureMeshNodeWAN '{ "Hostname" : "..." , "Mode" : "Static" , "IPAddress" : "..." , "Mask" : "..." , "DNS" : "...", "Gateway" : "..." }'
+##### ubus call mesh ConfigureMeshNodeWAN '{ "Hostname" : "..." , "Mode" : "Dhcp" }'
+These calls are used to configure WAN interface on specific mesh node:
+```
+{
+    "Success" : "true"
+}
+```
+##### ubus call mesh GetMeshNodeWANSpeedTest '{ "Hostname" : "..." }'
+This call is used to trigger speed test for WAN channel on specified mesh node:
+```
+{
+    "Success" : "true",
+    "Status" : "Running" | "Done"
+    "SpeedTestReport" : {
+        "DownloadSpeed" : "...",
+        "UploadSpeed" : "..."
+    }
+}
+```
+------------------------
+### Error message format
+------------------------
+All above calls return following message in case of any failure:
+```
+{
+    "Success" : "false",
+    "ErrorMessage" : "..." (optional)
+}
+```
+
+
+
