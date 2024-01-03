@@ -31,6 +31,7 @@ This call is used to get all connection chains in mesh network relatively to clo
     "MeshLinksChains" : [
         {
             "Hostname" : "...",
+            "RouteType" : "default" | "custom",
             "WirelessSignalPowerRatio" : "...",
             "LinkStatus" : {
                 "RxBitrate" : "...",
@@ -43,6 +44,13 @@ This call is used to get all connection chains in mesh network relatively to clo
         },
         ...
     ]
+}
+```
+##### ubus call mesh DefineCustomMeshRoute '{ "MeshRoutesChain" : [ <MeshHostname1> , <MeshHostname2>, ... ] }'
+This call is used to get all connection chains in mesh network relatively to closest node:
+```
+{
+    "Success" : true
 }
 ```
 ##### ubus call mesh GetMeshNetworkWANStatus '{ "SearchFrom" : "...", "RoutesDepth" : "..." }'
