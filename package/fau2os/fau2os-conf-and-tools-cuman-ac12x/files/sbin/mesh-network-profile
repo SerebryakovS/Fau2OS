@@ -19,7 +19,7 @@ ManageProtocol() {
     fi;
 }
 
-if [[ $SelectedNetworkProfile == *"bat"* ]]; then
+if [[ $SelectedNetworkProfile == *"batman"* ]]; then
     ManageProtocol "batadv:%N1" true
 else
     ManageProtocol "batadv:%N1" false

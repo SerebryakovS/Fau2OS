@@ -4,9 +4,9 @@
 
 ResponseError() {
   jq -n \
-	--arg success "false" \
-	--arg error_message "$3" \
-	'{"Success": $Success, "ErrorMessage": $error_message}'
+	--arg Success "false" \
+	--arg ErrorMessage "$1" \
+	'{"Success": $Success, "ErrorMessage": $ErrorMessage}'
 };
 
 
@@ -29,10 +29,14 @@ case "$1" in
 	call)
 		case "$2" in
 			GetMeshNetworkOverview)
-				if [ -z "$3" ]; then
-					Response=$(ResponseError "Missing request body")
+				read InputJsonObject
+				if [ $(echo $InputJsonObject | jq '. | has("SearchFrom")') = "false" ]; then
+					Response=$(ResponseError "SearchFrom field not found");
 				else
-					echo '{
+					MeshNodesObject=$(mesh-hosts-resolve);
+
+# ssh fau2-023a -y
+					Response='{
 						"Success": true,
 						"MeshNodes": [
 							{
@@ -299,7 +303,7 @@ case "$1" in
 # 					echo "$JsonPacketToReturn"
 # 				fi;
 # 			;;
-# 		esac;
+		esac;
 	;;
 esac;
 

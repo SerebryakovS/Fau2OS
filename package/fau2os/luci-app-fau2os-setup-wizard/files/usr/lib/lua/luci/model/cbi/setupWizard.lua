@@ -21,8 +21,8 @@ for hex = 2, 254, 4 do
 end
 
 local Routing = SystemSection:option(ListValue, "network_profile", translate("Routing strategy:"))
-Routing:value("bmx", translate("BMX7"))
-Routing:value("bat", translate("Batman-Adv"))
-Routing:value("bat+bmx", translate("Full Routing"))
+Routing:value("bmx", translate("BMX"))
+Routing:value("batman", translate("Batman-Adv"))
+Routing:value("batman+bmx", translate("Full Routing"))
 
 return WizardMap

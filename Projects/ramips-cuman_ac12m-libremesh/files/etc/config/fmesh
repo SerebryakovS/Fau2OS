@@ -2,5 +2,5 @@
 config system 'core'
         option node_id_one 'FF'
         option node_id_two 'FF'
-        option network_profile 'bat+bmx'
+        option network_profile 'batman+bmx'
         option epalna '1'

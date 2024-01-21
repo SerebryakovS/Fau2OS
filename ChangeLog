@@ -25,7 +25,7 @@ ACTIONS:
     0010. Разделены профили для ac12g и ac12m(для дальнейшей правки DTS и включения sn3218)
     0011. В баннер включена информация по профилю и дате релиза
     0012. Исправлены поддержки модели в DTS, теперь предупреждений нет при перезаливке прошивки
-
+    0013. Добавлена поддержка sn3218 на уровне драйвера и добавлена интеграция в /etc/config/led
 
 grep -Rns "cuman:green:power-g" ./*
 ./build_dir/target-mipsel_24kc_musl/linux-ramips_mt7621/base-files/.pkgdir/base-files/bin/sysdef:88:    uci set system.@led[0].sysfs='cuman:green:power-g'
@@ -54,3 +54,71 @@ sn3218:0:54:11  sn3218:0:54:16  sn3218:0:54:6   sn3218:led2
 sn3218:0:54:12  sn3218:0:54:17  sn3218:0:54:7   sn3218:led3
 
 
+/////////////////////////
+
+
+I want to create next line topology: fau2-029e <-> fau2-02ae <-> fau2-02be <-> fau2-023a
+
+    fau2-029e: links_count=1; block(fau2-02be, fau2-023a)
+    fau2-02ae: links_count=2; block(fau2-023a)
+    fau2-02be: links_count=2; block(fau2-029e)
+    fau2-023a: links_count=1; block(fau2-029e,fau2-02ae)
+
+
+fau2-029e | local_mac: F8:5E:3C:9C:02:9E | local_ipv6: fd70:2226:578b:5f4f:  f3:c4f3:b370: 2fa | wlan1_ipv6: fe80::fa5e:3cff:fe9c:2a2
+fau2-02ae | local_mac: F8:5E:3C:CC:02:AE | local_ipv6: fd70: 2a5:b1b1:7425:2ddc:6416:8e09:82d8 | wlan1_ipv6: fe80::fa5e:3cff:fecc:2b2
+fau2-02be | local_mac: F8:5E:3C:1E:57:05 | local_ipv6: fd70: ade:2129:b55a:9fe0:ff1d:c612:5af1 | wlan1_ipv6: fe80::fa5e:3cff:fe1e:2c2
+fau2-023a | local_mac: F8:5E:3C:FF:EA:3D | local_ipv6: fd70:a742:5554:d725:a479:b53c:cc59:7049 | wlan1_ipv6: fe80::fa5e:3cff:feff:23e
+
+device: wlan1-mesh_18
+
+iptables fau2-029e:
+    wireless:
+        list maclist 'F8:5E:3C:1E:57:05' # MAC of fau2-02be
+        list maclist 'F8:5E:3C:FF:EA:3D' # MAC of fau2-023a
+iptables fau2-02ae:
+    wireless:
+        list maclist 'F8:5E:3C:FF:EA:3D' # MAC of fau2-023a
+iptables fau2-02be:
+    wireless:
+        list maclist 'F8:5E:3C:9C:02:9E' # MAC of fau2-029e
+iptables fau2-023a:
+    wireless:
+        list maclist 'F8:5E:3C:9C:02:9E' # MAC of fau2-029e
+        list maclist 'F8:5E:3C:CC:02:AE' # MAC of fau2-02ae
+
+It appears that the iptables and firewall rules are not sufficient to disrupt the BMX7 mesh links, as BMX7 is likely forming links at a layer below where iptables operates. BMX7, being a mesh networking protocol, is designed to automatically discover and maintain links with nearby nodes, which is why your iptables rules aren't affecting it.
+
+from fau2-029e:
+    {
+        "destination_label": "fau2-02ae.02A5B1B1",
+        "next_label": "fau2-02ae.02A5B1B1",
+        "hops": 1,
+    },
+    {
+        "destination_label": "fau2-02be.0ADE2129",
+        "next_label": "fau2-02ae.02A5B1B1",
+        "hops": 3,
+    },
+    {
+        "destination_label": "fau2-023a.A7425554",
+        "next_label": "fau2-02ae.02A5B1B1",
+        "hops": 2,
+    }
+
+root@fau2-029e:/# traceroute fd70:ade:2129:b55a:9fe0:ff1d:c612:5af1
+traceroute to fd70:ade:2129:b55a:9fe0:ff1d:c612:5af1 (fd70:ade:2129:b55a:9fe0:ff1d:c612:5af1), 30 hops max, 64 byte packets
+ 1  fd70:2a5:b1b1:7425:2ddc:6416:8e09:82d8 (fd70:2a5:b1b1:7425:2ddc:6416:8e09:82d8)  1.593 ms  1.328 ms  0.682 ms
+ 2  fd70:a742:5554:d725:a479:b53c:cc59:7049 (fd70:a742:5554:d725:a479:b53c:cc59:7049)  4.327 ms  67.696 ms  98.484 ms
+ 3  fd70:ade:2129:b55a:9fe0:ff1d:c612:5af1 (fd70:ade:2129:b55a:9fe0:ff1d:c612:5af1)  129.582 ms  91.710 ms  140.757 ms
+
+
+
+
+10.68.221.231
+External LNA Gain n for 5GHz (0x45/0x49/0x4D)
+The default eLNA gain value would be 0x8C and it means m “ +12dB”. I've set BF (111111) which is NOT invalid
+NIC Configuration 1 (0x36/0x37)
+3-th bit:  External 5Ghz band LNA
+insmod mtd-rw.ko i_want_a_brick=1 && mtd -r write /root/eeprom.bin factory
+10011011 - 9B - 27dBm

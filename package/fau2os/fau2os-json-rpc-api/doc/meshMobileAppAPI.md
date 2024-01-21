@@ -15,7 +15,8 @@ This call is used to get fast mesh network overview to build the round map:
             "HopsToMe" : "...", // 0 - for closest
             "NetworkDeviceInfo" : {
                 "MACAddress" : "...",
-                "IPAddress" : "...",
+                "IPv4Address" : "...",
+                "IPv6Address" : "...",
                 "Hostmame" : "..."
             }
         },
@@ -74,7 +75,7 @@ This call is used to retrieve information about all clients currently connected 
             "ClosestNodeHostname" : "...",
             "NetworkDeviceInfo" : {
                 "MACAddress" : "...",
-                "IPAddress" : "...",
+                "IPv4Address" : "...",
                 "Hostmame" : "..."
             },
             "ConnectionType" : "2ghz" | "5ghz" | "eth",
@@ -91,7 +92,7 @@ This call is used to retrieve information about all clients currently connected 
         {
             "NetworkDeviceInfo" : {
                 "MACAddress" : "...",
-                "IPAddress" : "...",
+                "IPv4Address" : "...",
                 "Hostmame" : "..."
             },
             "BlockDatetime" : "..."
@@ -117,7 +118,7 @@ This call is used to reboot specific mesh router (or reset it's network/wireless
     "Success" : "true"
 }
 ```
-##### ubus call mesh ConfigureMeshNodeWAN '{ "Hostname" : "..." , "Mode" : "Static" , "IPAddress" : "..." , "Mask" : "..." , "DNS" : "...", "Gateway" : "..." }'
+##### ubus call mesh ConfigureMeshNodeWAN '{ "Hostname" : "..." , "Mode" : "Static" , "IPv4Address" : "..." , "Mask" : "..." , "DNS" : "...", "Gateway" : "..." }'
 ##### ubus call mesh ConfigureMeshNodeWAN '{ "Hostname" : "..." , "Mode" : "Dhcp" }'
 These calls are used to configure WAN interface on specific mesh node:
 ```

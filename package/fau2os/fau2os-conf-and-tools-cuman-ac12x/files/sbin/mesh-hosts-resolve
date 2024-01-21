@@ -1,0 +1,39 @@
+#!/bin/bash
+
+VerifyJsonOutput(){
+    if echo "$1" | jq . >/dev/null 2>&1; then
+        if echo "$1" | jq '.Nodes | length > 0' | grep -q true; then
+            echo "true" && return;
+        fi;
+    fi;
+    echo "false";
+};
+
+MeshNodesObject=$(GetMeshNetworkOverview);
+SelectedNetworkProfile=$(uci get fmesh.core.network_profile);
+IFS='+' read -r -a RoutingProtocolsList <<< "$SelectedNetworkProfile"
+OutputNodesJsonObject="";
+for Protocol in "${RoutingProtocolsList[@]}"; do
+    case "$1" in
+        bmx)
+            OutputNodesJsonObject=$(mesh-hosts-resolve-bmx);
+        ;;
+        bat)
+            OutputNodesJsonObject=$(mesh-hosts-resolve-batman);
+        ;;
+        olsr)
+            OutputNodesJsonObject=$(mesh-hosts-resolve-olsr);
+        ;;
+        babel)
+            OutputNodesJsonObject=$(mesh-hosts-resolve-babel);
+        ;;
+        hwmp)
+            OutputNodesJsonObject=$(mesh-hosts-resolve-hwmp);
+        ;;
+    esac;
+    if [ $(VerifyJsonOutput $OutputNodesJsonObject) = "true" ]; then
+        jq -n "$OutputNodesJsonObject"
+        break;
+    fi;
+done;
+jq -n '{"Success" : "false", "ErrorMessage" : "Could not resolve mesh hosts" }'
