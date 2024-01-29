@@ -697,7 +697,7 @@ define Device/cuman_ac12m-gpa
 	luci luci-compat luci-app-cpu-status-mini \
 	lime-app lime-proto-anygw lime-proto-batadv lime-proto-bmx7 lime-proto-wan \
 	lime-system profile-freifunk-80211s-sae-bmx7-batadv \
-	fau2os-json-rpc-api luci-app-fau2os-setup-wizard luci-theme-fau2os \
+	fau2os-json-rpc-api luci-app-fau2os-setup-wizard luci-theme-fau2os-prod \
 	sn3218-user-control kmod-sn3218 fau2os-conf-and-tools-cuman-ac12x
 endef
 TARGET_DEVICES += cuman_ac12m-gpa
